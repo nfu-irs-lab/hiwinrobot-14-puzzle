@@ -1,9 +1,9 @@
-# Robotic Arm Control Panel
+# 第 14 屆上銀智慧機械手臂競賽-智慧拼圖
 
-[![GitHub release](https://img.shields.io/github/release/nfu-irs-lab/robotic-arm-control-panel.svg)](https://github.com/nfu-irs-lab/robotic-arm-control-panel/releases)
-[![GitHub issues](https://img.shields.io/github/issues/nfu-irs-lab/robotic-arm-control-panel.svg)](https://github.com/nfu-irs-lab/robotic-arm-control-panel/issues)
+[![GitHub release](https://img.shields.io/github/release/nfu-irs-lab/hiwinrobot-14-puzzle.svg)](https://github.com/nfu-irs-lab/hiwinrobot-14-puzzle/releases)
+[![GitHub issues](https://img.shields.io/github/issues/nfu-irs-lab/hiwinrobot-14-puzzle.svg)](https://github.com/nfu-irs-lab/hiwinrobot-14-puzzle/issues)
 
-手臂控制面板。
+> Forked from [nfu-irs-lab/robotic-arm-control-panel `40c7c83`](https://github.com/nfu-irs-lab/robotic-arm-control-panel/commit/40c7c839025796ae9265d5d90707199906aedd47)
 
 ---
 
