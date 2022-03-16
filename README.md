@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/release/nfu-irs-lab/hiwinrobot-14-puzzle.svg)](https://github.com/nfu-irs-lab/hiwinrobot-14-puzzle/releases)
 [![GitHub issues](https://img.shields.io/github/issues/nfu-irs-lab/hiwinrobot-14-puzzle.svg)](https://github.com/nfu-irs-lab/hiwinrobot-14-puzzle/issues)
 
-> Forked from [nfu-irs-lab/robotic-arm-control-panel `40c7c83`](https://github.com/nfu-irs-lab/robotic-arm-control-panel/commit/40c7c839025796ae9265d5d90707199906aedd47)
+> Forked from [nfu-irs-lab/robotic-arm-control-panel `Ver 5.1.0`](https://github.com/nfu-irs-lab/robotic-arm-control-panel/releases/tag/v5.1.0)
 
 ---
 
