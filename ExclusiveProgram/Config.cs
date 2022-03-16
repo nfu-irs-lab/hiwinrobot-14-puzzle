@@ -10,6 +10,6 @@ namespace ExclusiveProgram
 
         public override string GripperComPort => "COM1";
 
-        public override bool GripperEnable => false;
+        public override bool GripperEnable => true;
     }
 }
