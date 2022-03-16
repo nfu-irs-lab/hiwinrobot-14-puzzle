@@ -8,7 +8,7 @@ namespace ExclusiveProgram
 
         public override bool ArmEnable => true;
 
-        public override string GripperComPort => "COM1";
+        public override string GripperComPort => "COM10";
 
         public override bool GripperEnable => true;
     }
