@@ -241,19 +241,12 @@ namespace Puzzle.Concrete
         public Image<Gray, byte> Correct(Image<Bgr, byte> input, PuzzleData raw)
         {
             Rectangle rect = new Rectangle((int)(raw.CentralPosition.X-raw.Size.Width/2.0f),(int)(raw.CentralPosition.Y-raw.Size.Height/2.0f),raw.Size.Width,raw.Size.Height);
-            Mat i=Save_Image(input.Mat,rect,raw.Angle);
-            return VisualSystem.Mat2Image<Gray>(i);
-        }
 
-        /// <summary>
-        /// 回傳旋轉後圖片
-        /// </summary>
-        /// <param name="rect"></param>
-        /// <param name="Angel"></param>
-        /// <returns></returns>
-        private Mat Save_Image(Mat Ori_img,Rectangle rect, double Angel)
-        {
+            Mat Ori_img = VisualSystem.Image2Mat<Bgr>(input);
             Mat new_img_Save = new Mat();
+
+            //將ROI選取區域使用Mat型式讀取
+            Image<Bgr, byte> Copy_ = new Mat(Ori_img,rect).ToImage<Bgr,byte>();
 
             //獲得矩形長寬
             int Rotate_newImg_x = rect.Width,
@@ -268,8 +261,6 @@ namespace Puzzle.Concrete
             //ROI設定，須為→(中心-(邊長/2))，為了將圖片放到中央
             new_ing.ROI = new Rectangle(new Point(((int)Lenght - Rotate_newImg_x) / 2, ((int)Lenght - Rotate_newImg_y) / 2), new Size(Rotate_newImg_x, Rotate_newImg_y));
 
-            //將ROI選取區域使用Mat型式讀取
-            Image<Bgr, byte> Copy_ = new Mat(Ori_img,rect).ToImage<Bgr,byte>();
                 
             //將圖片複製到圖片中央
             Copy_.CopyTo(new_ing);
@@ -278,7 +269,7 @@ namespace Puzzle.Concrete
             new_ing.ROI = Rectangle.Empty;
 
             //將圖片旋轉(矯正[rectify]用)，旋轉出邊界顏色使用ROI_HSV值轉RGB(後續處理方便)
-            new_ing = new_ing.Rotate(Angel, new Bgr(Color.Green));
+            new_ing = new_ing.Rotate(raw.Angle, new Bgr(Color.Green));
 
             //new_ing._EqualizeHist();
             //進一步縮小圖片
@@ -336,8 +327,9 @@ namespace Puzzle.Concrete
                 //儲存圖片
                 //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");
             }
-            return new_img_Save;
+            return VisualSystem.Mat2Image<Gray>(new_img_Save);
         }
+
     }
 
 

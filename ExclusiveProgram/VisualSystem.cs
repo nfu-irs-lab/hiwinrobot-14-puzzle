@@ -1,12 +1,5 @@
-﻿using System.Diagnostics;
-using Emgu.CV;
-using Emgu.CV.Util;
+﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
-using Emgu.CV.Structure;
-using Emgu.CV.Features2D;
-using Emgu.CV.Flann;
-using System.Drawing;
-using System;
 using Emgu.CV.Structure;
 namespace ExclusiveProgram
 {
@@ -47,7 +40,7 @@ namespace ExclusiveProgram
         }
 
 
-        public static Mat Image2Mat(Image<Bgr,byte> image)
+        public static Mat Image2Mat<T>(Image<T,byte> image) where T : struct, IColor
         {
             return image.Mat;
         }

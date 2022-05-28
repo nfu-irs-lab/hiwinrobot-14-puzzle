@@ -46,7 +46,6 @@ namespace ExclusiveProgram
             }
 
             CvInvoke.Imshow("raw",frame);
-            CvInvoke.Imshow("bin",bin);
             CvInvoke.WaitKey(100000);
             
             //定義結構元素
