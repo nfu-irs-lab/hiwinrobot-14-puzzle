@@ -5,7 +5,9 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Features2D;
 using Emgu.CV.Flann;
-
+using System.Drawing;
+using System;
+using Emgu.CV.Structure;
 namespace ExclusiveProgram
 {
     public class VisualSystem
@@ -25,12 +27,29 @@ namespace ExclusiveProgram
 
         public static Image<Bgr,byte> CaptureImage()
         {
-            Mat image = camera.QueryFrame();
-            return image.Clone().ToImage<Bgr, byte>();
+            return Mat2Image<Bgr>(CaptureMat());
         }
-        public static Image<Bgr, byte> LoadImageFromFile(string filename)
+
+        public static Mat CaptureMat()
         {
-            return CvInvoke.Imread(filename).Clone().ToImage<Bgr, byte>();
+            return camera.QueryFrame();
+        }
+
+
+        public static Image<Bgr,byte> LoadImageFromFile(string filename)
+        {
+            return Mat2Image<Bgr>(CvInvoke.Imread(filename));
+        }
+
+        public static Image<T, byte> Mat2Image<T>(Mat mat) where T : struct, IColor
+        {
+            return mat.Clone().ToImage<T, byte>();
+        }
+
+
+        public static Mat Image2Mat(Image<Bgr,byte> image)
+        {
+            return image.Mat;
         }
 
         #region 圖片預處理

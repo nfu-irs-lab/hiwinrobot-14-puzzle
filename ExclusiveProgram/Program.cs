@@ -27,21 +27,25 @@ namespace ExclusiveProgram
             var image=VisualSystem.LoadImageFromFile("samples\\sample1.png");
             var gray=VisualSystem.BgrToGray(image);
             var bin = VisualSystem.Binarization(gray, 100);
-            //var aa = VisualSystem.Binarization(VisualSystem.BgrToGray(VisualSystem.WhiteBalance(VisualSystem.ExtendColor(image))),120);
-
 
             PuzzleLocator locator = new PuzzleLocator();
+            PuzzleCorrector corrector= new PuzzleCorrector(100);
+
             List<PuzzleData> dataList=locator.Locate(bin);
 
+            var frame = image.Clone();
             foreach (PuzzleData data in dataList)
             {
                 Point StartPoint = new Point((int)(data.CentralPosition.X - (data.Size.Width / 2.0f)), (int)(data.CentralPosition.Y - (data.Size.Height / 2.0f)));
-                CvInvoke.Rectangle(image, new Rectangle(StartPoint.X,StartPoint.Y,data.Size.Width, data.Size.Height),new MCvScalar(0,0,255),3);
-                CvInvoke.PutText(image,"Angle:"+data.Angle,new Point(StartPoint.X,StartPoint.Y-20), Emgu.CV.CvEnum.FontFace.HersheyComplex, 0.5, new MCvScalar(0, 0, 255));
+
+                CvInvoke.Rectangle(frame, new Rectangle(StartPoint.X,StartPoint.Y,data.Size.Width, data.Size.Height),new MCvScalar(0,0,255),3);
+                CvInvoke.PutText(frame,"Angle:"+data.Angle,new Point(StartPoint.X,StartPoint.Y-20), Emgu.CV.CvEnum.FontFace.HersheyComplex, 0.5, new MCvScalar(0, 0, 255));
+
+                CvInvoke.Imshow("A"+data.Angle,corrector.Correct(image,data));
 
             }
 
-            CvInvoke.Imshow("raw",image);
+            CvInvoke.Imshow("raw",frame);
             CvInvoke.Imshow("bin",bin);
             CvInvoke.WaitKey(100000);
             

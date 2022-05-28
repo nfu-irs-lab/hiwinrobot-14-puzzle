@@ -55,7 +55,7 @@ namespace Puzzle.Framework
 
     public interface IPuzzleCorrector
     {
-        Image<Bgr,Byte> Correct(Image<Bgr, Byte> input,PuzzleData raw);
+        Image<Gray,Byte> Correct(Image<Bgr, Byte> input,PuzzleData raw);
     }
 
     public interface IPuzzleRecognizer
@@ -78,7 +78,7 @@ namespace Puzzle.Concrete
         private IPuzzleLocator locator;
         private IPuzzleCorrector corrector;
 
-        public DefaultPuzzleFactory(IPuzzleRecognizer recognizer,IPuzzleLocator locator,IPuzzleCorrector corrector)
+        public DefaultPuzzleFactory(IPuzzleRecognizer recognizer, IPuzzleLocator locator, IPuzzleCorrector corrector)
         {
             this.recognizer = recognizer;
             this.locator = locator;
@@ -86,19 +86,19 @@ namespace Puzzle.Concrete
         }
         public List<PuzzlePiece> Execute(Image<Bgr, byte> input)
         {
-            List<PuzzleData> raws=locator.Locate(VisualSystem.Binarization(VisualSystem.BgrToGray(input),100));
-            List<Image<Bgr,Byte>> PuzzleImages=new List<Image<Bgr, byte>>();
-            foreach(PuzzleData piece in raws)
+            List<PuzzleData> raws = locator.Locate(VisualSystem.Binarization(VisualSystem.BgrToGray(input), 100));
+            List<Image<Bgr, Byte>> PuzzleImages = new List<Image<Bgr, byte>>();
+            foreach (PuzzleData piece in raws)
             {
-                PuzzleImages.Add(corrector.Correct(input, piece));
+                //PuzzleImages.Add(corrector.Correct(input, piece));
             }
 
-            List<PuzzleType> types=recognizer.Recognize(PuzzleImages);
-               
-            List<PuzzlePiece> puzzles=new List<PuzzlePiece>();
-            for(int i = 0; i < PuzzleImages.Count; i++)
+            List<PuzzleType> types = recognizer.Recognize(PuzzleImages);
+
+            List<PuzzlePiece> puzzles = new List<PuzzlePiece>();
+            for (int i = 0; i < PuzzleImages.Count; i++)
             {
-                puzzles.Add(new PuzzlePiece(types[i],raws[i].Angle,raws[i].Size,PuzzleImages[i]));
+                puzzles.Add(new PuzzlePiece(types[i], raws[i].Angle, raws[i].Size, PuzzleImages[i]));
             }
             return puzzles;
         }
@@ -108,7 +108,7 @@ namespace Puzzle.Concrete
     {
 
         private Mat[] Template_Puzzle = new Mat[35];
-        
+
         //是否獲得HSV、ROI區域與是否開燈
         private bool GetWholePuzzle = false;
 
@@ -121,7 +121,7 @@ namespace Puzzle.Concrete
         public List<PuzzleData> Locate(Image<Gray, byte> input)
         {
 
-            List<PuzzleData> puzzleDataList=new List<PuzzleData>();
+            List<PuzzleData> puzzleDataList = new List<PuzzleData>();
 
             //取得輪廓組套件
             VectorOfVectorOfPoint contours = findContours(input);
@@ -150,11 +150,11 @@ namespace Puzzle.Concrete
 
                 //獲得最小旋轉矩形，取得角度用
                 RotatedRect BoundingBox = CvInvoke.MinAreaRect(contour);
-                
+
                 PuzzleData puzzleData = new PuzzleData();
 
-                Point Position=getCentralPosition(puzzleData.Angle,contour);
-                if (CheckDuplicatePuzzlePosition(puzzleDataList,Position)) { 
+                Point Position = getCentralPosition(puzzleData.Angle, contour);
+                if (CheckDuplicatePuzzlePosition(puzzleDataList, Position)) {
                     puzzleData.Angle = getAngle(BoundingBox, BoundingBox_, rect);
                     puzzleData.CentralPosition = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);
@@ -166,7 +166,7 @@ namespace Puzzle.Concrete
             return puzzleDataList;
         }
 
-        private Point getCentralPosition(float Angle,VectorOfPoint contour)
+        private Point getCentralPosition(float Angle, VectorOfPoint contour)
         {
             //畫出最小外切圓，獲得圓心用
             CircleF Puzzle_circle = CvInvoke.MinEnclosingCircle(contour);
@@ -187,7 +187,7 @@ namespace Puzzle.Concrete
         /// </summary>
         /// <param name="currentPuzzlePosition"></param>
         /// <returns></returns>
-        private bool CheckDuplicatePuzzlePosition(List<PuzzleData> definedPuzzleDataList,Point currentPuzzlePosition)
+        private bool CheckDuplicatePuzzlePosition(List<PuzzleData> definedPuzzleDataList, Point currentPuzzlePosition)
         {
             bool Answer = true;
             for (int i = 0; i < definedPuzzleDataList.Count; i++)
@@ -204,7 +204,7 @@ namespace Puzzle.Concrete
         }
 
         #endregion 檢查重複項
-        private float getAngle(RotatedRect BoundingBox,Rectangle BoundingBox_,Rectangle rect)
+        private float getAngle(RotatedRect BoundingBox, Rectangle BoundingBox_, Rectangle rect)
         {
 
             float Angel = 0;
@@ -225,8 +225,118 @@ namespace Puzzle.Concrete
                 Angel = -BoundingBox.Angle;
             }
 
-            
+
             return Angel;
+        }
+    }
+
+    public class PuzzleCorrector : IPuzzleCorrector
+    {
+        private readonly int thereshold;
+        public PuzzleCorrector(int Thereshold)
+        {
+            thereshold = Thereshold;
+        }
+
+        public Image<Gray, byte> Correct(Image<Bgr, byte> input, PuzzleData raw)
+        {
+            Rectangle rect = new Rectangle((int)(raw.CentralPosition.X-raw.Size.Width/2.0f),(int)(raw.CentralPosition.Y-raw.Size.Height/2.0f),raw.Size.Width,raw.Size.Height);
+            Mat i=Save_Image(input.Mat,rect,raw.Angle);
+            return VisualSystem.Mat2Image<Gray>(i);
+        }
+
+        /// <summary>
+        /// 回傳旋轉後圖片
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="Angel"></param>
+        /// <returns></returns>
+        private Mat Save_Image(Mat Ori_img,Rectangle rect, double Angel)
+        {
+            Mat new_img_Save = new Mat();
+
+            //獲得矩形長寬
+            int Rotate_newImg_x = rect.Width,
+                Rotate_newImg_y = rect.Height;
+
+            //計算對角線，為了旋轉時圖片不轉出邊界
+            double Lenght = Math.Sqrt((Rotate_newImg_x * Rotate_newImg_x) + (Rotate_newImg_y * Rotate_newImg_y));
+
+            //創造 【邊長為對角線長】(後續處理方便)的擴大版圖片
+            Image<Bgr, byte> new_ing = new Image<Bgr, byte>((int)Lenght, (int)Lenght, new Bgr(Color.Green));
+
+            //ROI設定，須為→(中心-(邊長/2))，為了將圖片放到中央
+            new_ing.ROI = new Rectangle(new Point(((int)Lenght - Rotate_newImg_x) / 2, ((int)Lenght - Rotate_newImg_y) / 2), new Size(Rotate_newImg_x, Rotate_newImg_y));
+
+            //將ROI選取區域使用Mat型式讀取
+            Image<Bgr, byte> Copy_ = new Mat(Ori_img,rect).ToImage<Bgr,byte>();
+                
+            //將圖片複製到圖片中央
+            Copy_.CopyTo(new_ing);
+
+            //取消ROI設定
+            new_ing.ROI = Rectangle.Empty;
+
+            //將圖片旋轉(矯正[rectify]用)，旋轉出邊界顏色使用ROI_HSV值轉RGB(後續處理方便)
+            new_ing = new_ing.Rotate(Angel, new Bgr(Color.Green));
+
+            //new_ing._EqualizeHist();
+            //進一步縮小圖片
+            //尋找輪廓組函式
+            VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
+
+            //尋找輪廓函式
+            VectorOfPoint contour = new VectorOfPoint();
+
+            Image<Gray, byte> Out = new Image<Gray, byte>(new_ing.Size);
+
+            int RowsCount = new_ing.Rows;
+            int ColsCount = new_ing.Cols;
+
+            for (int i = 0; i < RowsCount; i++)
+            {
+                for (int j = 0; j < ColsCount; j++)
+                {
+                    int Red = (int)new_ing.Data[i, j, 2],
+                    Blue = (int)new_ing.Data[i, j, 0],
+                        threshold = Red + Blue;
+                    if (threshold > this.thereshold)
+                        Out.Data[i, j, 0] = 255;
+                    else
+                        Out.Data[i, j, 0] = 0;
+                }
+            }
+
+            Mat dst = Out.Mat;
+
+            //定義結構元素
+            Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
+            //Erode:侵蝕，Dilate:擴張
+            //CvInvoke.Dilate(dst, dst, Struct_element, new Point(1, 1), 3, BorderType.Default, new MCvScalar(0, 0, 0));
+
+            CvInvoke.Dilate(dst, dst, Struct_element, new Point(1, 1), 6, BorderType.Default, new MCvScalar(0, 0, 0));
+            CvInvoke.Erode(dst, dst, Struct_element, new Point(-1, -1), 3, BorderType.Default, new MCvScalar(0, 0, 0));
+
+            //尋找輪廓
+            CvInvoke.FindContours(dst, contours, null, RetrType.External, ChainApproxMethod.ChainApproxSimple);
+
+            //尋遍輪廓組
+            for (int test = 0; test < contours.Size; test++)
+            {
+                contour = contours[test];
+
+                //以最小矩形框選
+                Rectangle new_ing_Rectangle = CvInvoke.BoundingRectangle(contour);
+                ////畫出最小矩形
+                //CvInvoke.Rectangle(new_ing, new_ing_Rectangle, new MCvScalar(255, 255, 255));
+
+                //Mat裁減圖片
+                new_img_Save = new Mat(new_ing.Mat, new_ing_Rectangle);
+
+                //儲存圖片
+                //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");
+            }
+            return new_img_Save;
         }
     }
 
