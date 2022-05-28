@@ -55,7 +55,7 @@ namespace Puzzle.Framework
 
     public interface IPuzzleCorrector
     {
-        Image<Gray,Byte> Correct(Image<Bgr, Byte> input,PuzzleData raw);
+        Image<Bgr,Byte> Correct(Image<Bgr, Byte> input,PuzzleData raw);
     }
 
     public interface IPuzzleRecognizer
@@ -239,7 +239,7 @@ namespace Puzzle.Concrete
             thereshold = Thereshold;
         }
 
-        public Image<Gray, byte> Correct(Image<Bgr, byte> input, PuzzleData raw)
+        public Image<Bgr, byte> Correct(Image<Bgr, byte> input, PuzzleData raw)
         {
             Rectangle rect = new Rectangle((int)(raw.CentralPosition.X-raw.Size.Width/2.0f),(int)(raw.CentralPosition.Y-raw.Size.Height/2.0f),raw.Size.Width,raw.Size.Height);
 
@@ -324,7 +324,7 @@ namespace Puzzle.Concrete
                 //儲存圖片
                 //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");
             }
-            return VisualSystem.Mat2Image<Gray>(new_img_Save);
+            return VisualSystem.Mat2Image<Bgr>(new_img_Save);
         }
 
     }
