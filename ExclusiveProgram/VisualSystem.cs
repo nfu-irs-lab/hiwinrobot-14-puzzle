@@ -28,6 +28,10 @@ namespace ExclusiveProgram
             Mat image = camera.QueryFrame();
             return image.Clone().ToImage<Bgr, byte>();
         }
+        public static Image<Bgr, byte> LoadImageFromFile(string filename)
+        {
+            return CvInvoke.Imread(filename).Clone().ToImage<Bgr, byte>();
+        }
 
         #region 圖片預處理
 
