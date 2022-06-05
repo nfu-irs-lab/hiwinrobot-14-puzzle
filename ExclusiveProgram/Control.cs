@@ -30,7 +30,7 @@ namespace ExclusiveProgram
             Config = new Config();
 
             locator = new PuzzleLocator(new Size(300,300),new Size(100000,100000));
-            corrector = new PuzzleCorrector(150);
+            corrector = new PuzzleCorrector(240);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -40,8 +40,8 @@ namespace ExclusiveProgram
 
         private void AA()
         {
-            //var image = VisualSystem.LoadImageFromFile("samples\\Puzzles\\puzzle (1).jpg");
-            var image=VisualSystem.LoadImageFromFile("samples\\sample1.png");
+            var image = VisualSystem.LoadImageFromFile("samples\\Puzzles\\puzzle (1).jpg");
+            //var image=VisualSystem.LoadImageFromFile("samples\\sample1.png");
             var dst = ColorImagePreprocess(image);
             var bin = BinaryImagePreprocess(dst);
 

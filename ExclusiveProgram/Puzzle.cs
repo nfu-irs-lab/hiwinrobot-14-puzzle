@@ -318,7 +318,7 @@ namespace Puzzle.Concrete
                         Out.Data[i, j, 0] = 0;
                 }
             }
-
+            CvInvoke.Imshow("Aaa", Out);
             //定義結構元素
             Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
 
