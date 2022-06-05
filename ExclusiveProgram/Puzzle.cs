@@ -90,8 +90,7 @@ namespace Puzzle.Concrete
             List<Image<Bgr, Byte>> PuzzleImages = new List<Image<Bgr, byte>>();
             foreach (PuzzleData piece in raws)
             {
-                //corrector.Correct()
-                //PuzzleImages.Add(corrector.Correct(input, piece));
+                PuzzleImages.Add(corrector.Correct(input, piece));
             }
 
             List<PuzzleType> types = recognizer.Recognize(PuzzleImages);
