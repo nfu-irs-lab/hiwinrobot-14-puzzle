@@ -86,6 +86,7 @@ namespace Puzzle.Concrete
         }
         public List<PuzzlePiece> Execute(Image<Bgr, byte> input)
         {
+            /*
             List<PuzzleData> raws = locator.Locate(VisualSystem.Binarization(VisualSystem.BgrToGray(input), 100));
             List<Image<Bgr, Byte>> PuzzleImages = new List<Image<Bgr, byte>>();
             foreach (PuzzleData piece in raws)
@@ -101,6 +102,8 @@ namespace Puzzle.Concrete
                 puzzles.Add(new PuzzlePiece(types[i], raws[i].Angle, raws[i].Size, PuzzleImages[i]));
             }
             return puzzles;
+            */
+            return null;
         }
     }
 

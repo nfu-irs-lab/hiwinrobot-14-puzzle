@@ -47,32 +47,10 @@ namespace ExclusiveProgram
 
         #region 圖片預處理
 
-        #region 圖片二值化
-
-        public static Image<Gray,byte> Binarization(Image<Gray,byte> image,int threshold)
-        {
-            Image<Gray,byte> dst=new Image<Gray,byte>(image.Width,image.Height);
-            CvInvoke.Threshold(image, dst, threshold, 255, ThresholdType.Binary);
-            return dst;
-        }
-
-        #endregion 圖片二值化
-
-
-        public static Image<Gray,byte> BgrToGray(Image<Bgr,byte> image)
-        {   
-            Image<Gray,byte> dst=new Image<Gray,byte>(image.Width,image.Height);
-            CvInvoke.CvtColor(image, dst, ColorConversion.Bgr2Gray);
-            return dst;
-        }
-
-
         #region 圖片顏色拓展
 
-        public static Image<Bgr, byte> ExtendColor(Image<Bgr, byte> image)
+        public static void ExtendColor(Image<Bgr, byte> image,Image<Bgr,byte> outImage)
         {
-            Image<Bgr, byte> img = new Image<Bgr, byte>(image.Size);
-
             int rowsCounts = image.Rows;
             int colsCounts = image.Cols;
 
@@ -105,12 +83,10 @@ namespace ExclusiveProgram
                         d = d - min;
                         d = d / max;
                         d = d * 255;
-                        img.Data[i, j, k] = (byte)d;
+                        outImage.Data[i, j, k] = (byte)d;
                     }
                 }
             }
-
-            return img;
         }
 
         #endregion 圖片顏色拓展
@@ -122,7 +98,7 @@ namespace ExclusiveProgram
         /// </summary>
         /// <param name="img"></param>
         /// <returns></returns>
-        public static Image<Bgr, byte> WhiteBalance(Image<Bgr, byte> img)
+        public static void WhiteBalance(Image<Bgr, byte> img,Image<Bgr,byte> outImage)
         {
             int avgR = 0, avgG = 0, avgB = 0;
             int sumR = 0, sumG = 0, sumB = 0;
@@ -157,13 +133,11 @@ namespace ExclusiveProgram
                     newG = img.Data[h, w, 1] * kg;
                     newR = img.Data[h, w, 2] * kr;
 
-                    img.Data[h, w, 0] = (byte)(newB > 255 ? 255 : newB);
-                    img.Data[h, w, 1] = (byte)(newG > 255 ? 255 : newG);
-                    img.Data[h, w, 2] = (byte)(newR > 255 ? 255 : newR);
+                    outImage.Data[h, w, 0] = (byte)(newB > 255 ? 255 : newB);
+                    outImage.Data[h, w, 1] = (byte)(newG > 255 ? 255 : newG);
+                    outImage.Data[h, w, 2] = (byte)(newR > 255 ? 255 : newR);
                 }
             }
-
-            return img;
         }
 
         #endregion 白平衡
