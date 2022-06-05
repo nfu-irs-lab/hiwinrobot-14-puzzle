@@ -114,10 +114,13 @@ namespace Puzzle.Concrete
 
         //是否獲得HSV、ROI區域與是否開燈
         private bool GetWholePuzzle = false;
+        private readonly Size minSize;
+        private readonly Size maxSize;
 
-        public PuzzleLocator()
+        public PuzzleLocator(Size minSize,Size maxSize)
         {
-
+            this.minSize = minSize;
+            this.maxSize = maxSize;
         }
 
 
@@ -157,7 +160,8 @@ namespace Puzzle.Concrete
                 PuzzleData puzzleData = new PuzzleData();
 
                 Point Position = getCentralPosition(puzzleData.Angle, contour);
-                if (CheckDuplicatePuzzlePosition(puzzleDataList, Position)) {
+                if (CheckDuplicatePuzzlePosition(puzzleDataList, Position) && CheckSize(rect,Position))
+                {
                     puzzleData.Angle = getAngle(BoundingBox, BoundingBox_, rect);
                     puzzleData.CentralPosition = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);
@@ -167,6 +171,23 @@ namespace Puzzle.Concrete
             }
 
             return puzzleDataList;
+        }
+
+        private bool CheckSize(Rectangle rect,Point Position)
+        {
+            if(rect.Size.Width<minSize.Width||rect.Size.Height<minSize.Height)
+                return false;   
+
+            if(rect.Size.Width>maxSize.Width||rect.Size.Height>maxSize.Height)
+                return false;
+
+            if (Position.X - rect.Width / 2.0f < 0)
+                return false;
+
+            if (Position.Y - rect.Height/ 2.0f < 0)
+                return false;
+
+            return true;
         }
 
         private Point getCentralPosition(float Angle, VectorOfPoint contour)
@@ -246,7 +267,6 @@ namespace Puzzle.Concrete
             Rectangle rect = new Rectangle((int)(raw.CentralPosition.X-raw.Size.Width/2.0f),(int)(raw.CentralPosition.Y-raw.Size.Height/2.0f),raw.Size.Width,raw.Size.Height);
 
             Mat Ori_img = VisualSystem.Image2Mat<Bgr>(input);
-            Mat new_img_Save = new Mat();
 
             //將ROI選取區域使用Mat型式讀取
             Image<Bgr, byte> Copy_ = new Mat(Ori_img,rect).ToImage<Bgr,byte>();
@@ -299,17 +319,17 @@ namespace Puzzle.Concrete
                 }
             }
 
-
             //定義結構元素
             Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
 
             //Erode:侵蝕，Dilate:擴張
             CvInvoke.Dilate(Out, Out, Struct_element, new Point(1, 1), 6, BorderType.Default, new MCvScalar(0, 0, 0));
             CvInvoke.Erode(Out, Out, Struct_element, new Point(-1, -1), 3, BorderType.Default, new MCvScalar(0, 0, 0));
-
             //尋找輪廓
             CvInvoke.FindContours(Out, contours, null, RetrType.External, ChainApproxMethod.ChainApproxSimple);
 
+            int max_size=-1;
+            Rectangle max_size_rectangle=new Rectangle(new Point(-1,-1),new Size(0,0));
             //尋遍輪廓組
             for (int test = 0; test < contours.Size; test++)
             {
@@ -318,14 +338,22 @@ namespace Puzzle.Concrete
                 //以最小矩形框選
                 Rectangle new_ing_Rectangle = CvInvoke.BoundingRectangle(contour);
                 ////畫出最小矩形
-                //CvInvoke.Rectangle(new_ing, new_ing_Rectangle, new MCvScalar(255, 255, 255));
-
-                //Mat裁減圖片
-                new_img_Save = new Mat(new_img.Mat, new_ing_Rectangle);
-
-                //儲存圖片
-                //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");
+                //CvInvoke.Rectangle(OutA, new_ing_Rectangle, new MCvScalar(255, 255, 255));
+                int current = new_ing_Rectangle.Width * new_ing_Rectangle.Height;
+                if (current > max_size)
+                {
+                    max_size = current;
+                    max_size_rectangle= new_ing_Rectangle;
+                }
             }
+            if (max_size_rectangle.Width*max_size_rectangle.Height==0)
+                throw new Exception("Max Size rectangle not found.");
+
+
+            Mat new_img_Save = new Mat(new_img.Mat, max_size_rectangle);
+
+            //儲存圖片
+            //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");
             return VisualSystem.Mat2Image<Bgr>(new_img_Save);
         }
 
