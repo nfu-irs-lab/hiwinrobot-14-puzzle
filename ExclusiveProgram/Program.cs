@@ -1,5 +1,11 @@
-﻿using System;
+﻿using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Puzzle.Concrete;
+using Puzzle.Framework;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,5 +24,6 @@ namespace ExclusiveProgram
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm.MainForm(new Control()));
         }
+
     }
 }
