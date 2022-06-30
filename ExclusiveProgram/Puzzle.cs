@@ -1,15 +1,27 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
+using Emgu.CV.Features2D;
+using Emgu.CV.Flann;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using ExclusiveProgram;
 using Puzzle.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace Puzzle.Framework
 {
+
+
+    public struct result
+    {
+        public double Angel;
+        public Mat image;
+        public PointF[] pts;
+    };
+
     public class PuzzleData
     {
         public Point CentralPosition{ set; get; }
@@ -60,7 +72,7 @@ namespace Puzzle.Framework
 
     public interface IPuzzleRecognizer
     {
-        List<PuzzleType> Recognize(List<Image<Bgr, Byte>> input);
+        List<result> Recognize(List<Image<Bgr, Byte>> input);
     }
 
     public interface IPuzzleFactory
@@ -117,7 +129,7 @@ namespace Puzzle.Concrete
         private readonly Size minSize;
         private readonly Size maxSize;
 
-        public PuzzleLocator(Size minSize,Size maxSize)
+        public PuzzleLocator(Size minSize, Size maxSize)
         {
             this.minSize = minSize;
             this.maxSize = maxSize;
@@ -160,7 +172,7 @@ namespace Puzzle.Concrete
                 PuzzleData puzzleData = new PuzzleData();
 
                 Point Position = getCentralPosition(puzzleData.Angle, contour);
-                if (CheckDuplicatePuzzlePosition(puzzleDataList, Position) && CheckSize(rect,Position))
+                if (CheckDuplicatePuzzlePosition(puzzleDataList, Position) && CheckSize(rect, Position))
                 {
                     puzzleData.Angle = getAngle(BoundingBox, BoundingBox_, rect);
                     puzzleData.CentralPosition = Position;
@@ -173,18 +185,18 @@ namespace Puzzle.Concrete
             return puzzleDataList;
         }
 
-        private bool CheckSize(Rectangle rect,Point Position)
+        private bool CheckSize(Rectangle rect, Point Position)
         {
-            if(rect.Size.Width<minSize.Width||rect.Size.Height<minSize.Height)
-                return false;   
+            if (rect.Size.Width < minSize.Width || rect.Size.Height < minSize.Height)
+                return false;
 
-            if(rect.Size.Width>maxSize.Width||rect.Size.Height>maxSize.Height)
+            if (rect.Size.Width > maxSize.Width || rect.Size.Height > maxSize.Height)
                 return false;
 
             if (Position.X - rect.Width / 2.0f < 0)
                 return false;
 
-            if (Position.Y - rect.Height/ 2.0f < 0)
+            if (Position.Y - rect.Height / 2.0f < 0)
                 return false;
 
             return true;
@@ -264,12 +276,12 @@ namespace Puzzle.Concrete
 
         public Image<Bgr, byte> Correct(Image<Bgr, byte> input, PuzzleData raw)
         {
-            Rectangle rect = new Rectangle((int)(raw.CentralPosition.X-raw.Size.Width/2.0f),(int)(raw.CentralPosition.Y-raw.Size.Height/2.0f),raw.Size.Width,raw.Size.Height);
+            Rectangle rect = new Rectangle((int)(raw.CentralPosition.X - raw.Size.Width / 2.0f), (int)(raw.CentralPosition.Y - raw.Size.Height / 2.0f), raw.Size.Width, raw.Size.Height);
 
             Mat Ori_img = VisualSystem.Image2Mat<Bgr>(input);
 
             //將ROI選取區域使用Mat型式讀取
-            Image<Bgr, byte> Copy_ = new Mat(Ori_img,rect).ToImage<Bgr,byte>();
+            Image<Bgr, byte> Copy_ = new Mat(Ori_img, rect).ToImage<Bgr, byte>();
 
             //獲得矩形長寬
             int Rotate_newImg_x = rect.Width,
@@ -284,7 +296,7 @@ namespace Puzzle.Concrete
             //ROI設定，須為→(中心-(邊長/2))，為了將圖片放到中央
             new_img.ROI = new Rectangle(new Point(((int)Lenght - Rotate_newImg_x) / 2, ((int)Lenght - Rotate_newImg_y) / 2), new Size(Rotate_newImg_x, Rotate_newImg_y));
 
-                
+
             //將圖片複製到圖片中央
             Copy_.CopyTo(new_img);
 
@@ -358,6 +370,4 @@ namespace Puzzle.Concrete
         }
 
     }
-
-
 }
