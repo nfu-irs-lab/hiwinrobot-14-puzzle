@@ -21,6 +21,7 @@ namespace ExclusiveProgram
 {
     public partial class Control : MainForm.ExclusiveControl
     {
+        private readonly PuzzleRecognizer recognizer;
         private readonly PuzzleLocator locator;
         private readonly PuzzleCorrector corrector;
 
@@ -30,8 +31,8 @@ namespace ExclusiveProgram
             Config = new Config();
             locator = new PuzzleLocator(new Size(300,300),new Size(100000,100000));
             corrector = new PuzzleCorrector(240);
-
             var image = VisualSystem.LoadImageFromFile("samples\\modelImage.jpg");
+            recognizer = new PuzzleRecognizer(image);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -41,64 +42,25 @@ namespace ExclusiveProgram
 
         private void AA()
         {
+
+            var factory = new DefaultPuzzleFactory((int)numericUpDown_threshold.Value,locator,recognizer,corrector);
             var image = VisualSystem.LoadImageFromFile("samples\\Test.jpg");
-            //var image=VisualSystem.LoadImageFromFile("samples\\sample1.png");
-            Console.WriteLine("A"+image.Size);
-            var dst = ColorImagePreprocess(image);
-            Console.WriteLine("A"+dst.Size);
-            var bin = BinaryImagePreprocess(dst);
 
-            pictureBox_raw.Image = image.ToBitmap();
-            pictureBox_preprocess.Image = dst.ToBitmap();
-            pictureBox_bin.Image = bin.ToBitmap();
+            List<Puzzle_sturct> results = factory.Execute(image);
 
-
-            List<PuzzleData> dataList = locator.Locate(bin);
-
-            CvInvoke.NamedWindow("raw",WindowFlags.Normal);
-            var showImage = image.Clone();
-
-            puzzleView.Controls.Clear();
-            int num=0;
-            List<Image<Bgr, byte>> imageList = new List<Image<Bgr, byte>>(); 
-            foreach (PuzzleData data in dataList)
+            foreach (Puzzle_sturct result in results)
             {
-                Console.WriteLine("Posision:" + data.CentralPosition + "\t Size:"+data.Size+ "\t Angle:"+data.Angle);
-                Point StartPoint = new Point((int)(data.CentralPosition.X - (data.Size.Width / 2.0f)), (int)(data.CentralPosition.Y - (data.Size.Height / 2.0f)));
-
-                CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, data.Size.Width, data.Size.Height), new MCvScalar(0, 0, 255), 3);
-                CvInvoke.PutText(showImage, "Angle:" + data.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
-                var i = corrector.Correct(image, data);
-                imageList.Add(i);
-                Console.WriteLine("CSize:"+i.Size);
-                //CvInvoke.Imshow("A"+data.Angle,i);
+                //Point StartPoint = new Point((int)(location.Coordinate.X - (location.Size.Width / 2.0f)), (int)(location.Coordinate.Y - (location.Size.Height / 2.0f)));
+                //CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, location.Size.Width, location.Size.Height), new MCvScalar(0, 0, 255), 3);
+                //CvInvoke.PutText(showImage, "Angle:" + location.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
+                
                 var p = new PictureBox();
-                p.Image = i.ToBitmap();
+                p.Image = VisualSystem.Mat2Image<Bgr>(result.image).ToBitmap();
                 p.Size= new Size(200,200);
                 p.SizeMode=PictureBoxSizeMode.StretchImage;
                 puzzleView.Controls.Add(p);
+                Console.WriteLine("" + result.position);
             }
-            pictureBox_puzzle_location.Image = showImage.ToBitmap();
-
-
-            CvInvoke.Imshow("raw", showImage);
-            CvInvoke.WaitKey(10000);
         }
-        private Image<Bgr,byte> ColorImagePreprocess(Image<Bgr,byte> image)
-        {
-            var dst = new Image<Bgr, byte>(image.Size);
-            VisualSystem.WhiteBalance(image,dst);
-            VisualSystem.ExtendColor(dst,dst);
-            CvInvoke.MedianBlur(dst, dst, 27);
-            return dst;
-        }
-        private Image<Gray,byte> BinaryImagePreprocess(Image<Bgr,byte> image)
-        {
-            var bin=new Image<Gray, byte>(image.Size);
-            CvInvoke.CvtColor(image, bin, ColorConversion.Bgr2Gray);
-            CvInvoke.Threshold(bin, bin, ((int)numericUpDown_threshold.Value), 255, ThresholdType.Binary);
-            return bin;
-        }
-
     }
 }
