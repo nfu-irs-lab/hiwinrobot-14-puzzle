@@ -74,6 +74,8 @@
     <Reference Include="Emgu.CV.Platform.NetStandard, Version=4.5.5.4823, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
       <HintPath>..\packages\Emgu.CV.4.5.5.4823\lib\netstandard2.0\Emgu.CV.Platform.NetStandard.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="RASDK.Arm, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <HintPath>..\packages\NFUIRSL.RASDK.0.3.2\lib\net472\RASDK.Arm.dll</HintPath>
     </Reference>
@@ -104,6 +106,7 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -113,9 +116,9 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Puzzle.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Control.cs">
       <SubType>UserControl</SubType>
@@ -125,6 +128,20 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="puzzle.visual\concrete\DefaultPuzzleFactory.cs" />
+    <Compile Include="puzzle.visual\concrete\PuzzleCorrector.cs" />
+    <Compile Include="puzzle.visual\concrete\PuzzleLocator.cs" />
+    <Compile Include="puzzle.visual\concrete\PuzzleRecognizer.cs" />
+    <Compile Include="puzzle.visual\framework\IPuzzleFactory.cs" />
+    <Compile Include="puzzle.visual\framework\IPuzzleCorrector.cs" />
+    <Compile Include="puzzle.visual\framework\IPuzzleLocator.cs" />
+    <Compile Include="puzzle.visual\framework\IPuzzleRecognizer.cs" />
+    <Compile Include="ui.component\UserControl1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ui.component\UserControl1.Designer.cs">
+      <DependentUpon>UserControl1.cs</DependentUpon>
+    </Compile>
     <Compile Include="VisualSystem.cs" />
     <EmbeddedResource Include="Control.resx">
       <DependentUpon>Control.cs</DependentUpon>
@@ -138,6 +155,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="ui.component\UserControl1.resx">
+      <DependentUpon>UserControl1.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -169,6 +189,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="puzzle.handler\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
