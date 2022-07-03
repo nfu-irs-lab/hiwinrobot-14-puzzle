@@ -203,7 +203,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
                         CvInvoke.PutText(result, string.Format("{0}ms , {1:0.00}", matchTime, Slope), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 3, LineType.FourConnected);
                         result_.Angel = Angel;
-                        result_.image = result;
+                        result_.image = result.ToImage<Bgr,byte>();
                     }
                 }
 

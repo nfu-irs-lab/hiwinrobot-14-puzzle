@@ -16,7 +16,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
     public struct result
     {
         public double Angel;
-        public Mat image;
+        public Image<Bgr,byte> image;
         public PointF[] pts;
     };
 
