@@ -38,12 +38,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             foreach (LocationResult location in dataList)
             {
-                var i = corrector.Correct(image, location);
+                var correctedImage = corrector.Correct(image, location);
                 CorrectedPuzzleArgument argument = new CorrectedPuzzleArgument();
                 argument.Coordinate = location.Coordinate;
                 argument.Angle = location.Angle;
-                argument.image= i.Clone().Mat;
-                i.Dispose();
+                argument.image= correctedImage.Clone();
+                correctedImage.Dispose();
 
                 argument.Size = location.Size;
                 arguments.Add(argument);

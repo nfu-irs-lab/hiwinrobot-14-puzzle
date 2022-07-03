@@ -104,9 +104,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
 
             Mat new_img_Save = new Mat(new_img.Mat, max_size_rectangle);
-            
-
-
 
             //儲存圖片
             //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");

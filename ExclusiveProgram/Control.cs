@@ -40,7 +40,7 @@ namespace ExclusiveProgram
                 //CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, location.Size.Width, location.Size.Height), new MCvScalar(0, 0, 255), 3);
                 //CvInvoke.PutText(showImage, "Angle:" + location.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
                 var co= new UserControl1();
-                co.setImage(VisualSystem.Mat2Image<Bgr>(result.image).ToBitmap());
+                co.setImage(result.image.ToBitmap());
                 co.setLabel(result.Angel, result.coordinate);
                 //p.Image = VisualSystem.Mat2Image<Bgr>(result.image).ToBitmap();
                 puzzleView.Controls.Add(co);

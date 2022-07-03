@@ -1,4 +1,5 @@
 ﻿using Emgu.CV;
+using Emgu.CV.Structure;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -9,7 +10,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public Point Coordinate;
         public double Angle;
         public Size Size;
-        public Mat image;
+        public Image<Bgr,byte> image;
     }
 
     public struct result
@@ -23,7 +24,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
     {
         public double Angel;
         public Point coordinate;
-        public Mat image;
+        public Image<Bgr,byte> image;
         public string position;
     };
 

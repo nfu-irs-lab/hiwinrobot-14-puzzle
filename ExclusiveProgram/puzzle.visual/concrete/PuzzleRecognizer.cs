@@ -47,7 +47,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         
             foreach(CorrectedPuzzleArgument argument in arguments)
             {
-                puzzles.Add(doSingleRecognize(readOnlyModleImage.Clone().Mat,argument.image.Clone(), argument.Angle, argument.Coordinate));
+                puzzles.Add(doSingleRecognize(readOnlyModleImage.Clone().Mat,argument.image.Clone().Mat, argument.Angle, argument.Coordinate));
             }
             
 
@@ -107,7 +107,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             { y = 4; }
 
             Puzzle_sturct register = new Puzzle_sturct();
-            register.image = register_Puzzle.Clone().Mat;
+            register.image = register_Puzzle.Clone();
 
             register.coordinate = coordinate;
             register.position = y.ToString() + x.ToString();
