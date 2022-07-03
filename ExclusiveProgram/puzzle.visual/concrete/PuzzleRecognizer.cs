@@ -15,6 +15,9 @@ using System.Threading.Tasks;
 
 namespace ExclusiveProgram.puzzle.visual.concrete
 {
+
+
+
     public class PuzzleRecognizer : IPuzzleRecognizer
     {
         
@@ -77,7 +80,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             long matchTime;
             long score;
-            result Answer= Draw(register_Puzzle.Mat,modelImage, out matchTime, out score);
+            RecognizeResult Answer= Draw(register_Puzzle.Mat,modelImage, out matchTime, out score);
 
             //-------------------------------------------------------------------------------------
             /*
@@ -135,9 +138,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         /// <param name="observedImage">The observed image</param>
         /// <param name="matchTime">The output total time for computing the homography matrix.</param>
         /// <returns>The model image and observed image, the matched features and homography projection.</returns>
-        private result Draw(Mat observedImage,Mat modelImage, out long matchTime, out long score)
+        private RecognizeResult Draw(Mat observedImage,Mat modelImage, out long matchTime, out long score)
         {
-            result result_ = new result();
+            RecognizeResult result_ = new RecognizeResult();
             Mat homography;
             VectorOfKeyPoint modelKeyPoints = new VectorOfKeyPoint();
             VectorOfKeyPoint observedKeyPoints = new VectorOfKeyPoint();

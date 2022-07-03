@@ -13,7 +13,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public Image<Bgr,byte> image;
     }
 
-    public struct result
+    public struct RecognizeResult
     {
         public double Angel;
         public Image<Bgr,byte> image;
