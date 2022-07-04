@@ -45,7 +45,7 @@ namespace ExclusiveProgram
             var recognizer = new PuzzleRecognizer(modelImage);
             recognizer.setListener(new MyRecognizeListener(this));
 
-            var factory = new DefaultPuzzleFactory(locator,recognizer,corrector);
+            var factory = new DefaultPuzzleFactory(locator,recognizer,corrector,new PuzzleResultMerger());
             factory.setListener(new MyFactoryListener(this));
 
             var image = VisualSystem.LoadImageFromFile(file_path.Text);
@@ -214,22 +214,21 @@ namespace ExclusiveProgram
             }
 
             private readonly Control ui;
-            public void onCorrected(List<Image<Bgr, byte>> results)
-            {
-                foreach(var image in results)
-                {
-                    var control = new UserControl1();
-                    control.setImage(image.ToBitmap());
-                    control.setLabel("","");
-                    ui.corrector_result_puzzleView.Controls.Add(control);
-                }
-            }
 
             public void onLocated(List<LocationResult> results)
             {
             }
 
-            public void onRecognized(List<Puzzle_sturct> results)
+
+            public void onCorrected(Image<Bgr, byte> result)
+            {
+                var control = new UserControl1();
+                control.setImage(result.ToBitmap());
+                control.setLabel("","");
+                this.ui.corrector_result_puzzleView.Controls.Add(control);
+            }
+
+            public void onRecognized(RecognizeResult result)
             {
             }
         }

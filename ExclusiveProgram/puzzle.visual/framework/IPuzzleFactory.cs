@@ -12,8 +12,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
     public interface PuzzleFactoryListener
     {
         void onLocated(List<LocationResult> results);
-        void onCorrected(List<Image<Bgr,byte>> results);
-        void onRecognized(List<Puzzle_sturct> results);
+        void onCorrected(Image<Bgr,byte> result);
+        void onRecognized(RecognizeResult result);
     }
     public interface IPuzzleFactory
     {

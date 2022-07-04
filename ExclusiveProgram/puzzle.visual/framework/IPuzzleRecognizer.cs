@@ -16,7 +16,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
 
     public struct RecognizeResult
     {
-        public double Angel;
+        public double Angle;
         public PointF[] pts;
         public string position;
     };
@@ -36,7 +36,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
 
     public interface IPuzzleRecognizer
     {
-        List<Puzzle_sturct> Recognize(List<CorrectedPuzzleArgument> input);
+        RecognizeResult Recognize(Image<Bgr,byte> image);
         void setListener(PuzzleRecognizerListener listener);
     }
 

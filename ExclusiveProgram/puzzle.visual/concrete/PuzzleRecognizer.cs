@@ -41,46 +41,28 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //Mat Whole_Inside_Puzzle = new Mat(@"C:\Emgu.CV.Mat.jpg");
         }
 
-        public List<Puzzle_sturct> Recognize(List<CorrectedPuzzleArgument> arguments)
+        public RecognizeResult Recognize(Image<Bgr,byte> image)
         {
-            List<Puzzle_sturct> puzzles = new List<Puzzle_sturct>();
+            /*
+            List<RecognizeResult> puzzles = new List<RecognizeResult>();
             Stopwatch time;
-
             time = Stopwatch.StartNew();
-        
-            foreach(CorrectedPuzzleArgument argument in arguments)
-            {
-                puzzles.Add(doSingleRecognize(readOnlyModleImage.Clone().Mat,argument.image.Clone().Mat, argument.Angle, argument.Coordinate));
-            }
-            
+            */
+            var modelImage = readOnlyModleImage.Clone().Mat;
 
-            foreach (var k in Check_Error_Index)
-            {
-                //Puzzle.RemoveAt(k);6
-            }
-
-            time.Stop();
-            long Time = time.ElapsedMilliseconds;
-
-            return puzzles;
-            //return Time;
-        }
-        
-        private Puzzle_sturct doSingleRecognize(Mat modelImage,Mat image,double angle,Point coordinate)
-        {
             //Puzzle[i].image.Dispose();
             //-------------------------------------------------------------------------------------
             //Image<Bgr, byte> register_Puzzle = new Image<Bgr, byte>($@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\Tzu-Fu\HIWIN_Robot_13th_puzzle\Images\{i}.jpg");
             //result Answer = Test(Puzzle[i].image, Whole_Inside_Puzzle);
             //-------------------------------------------------------------------------------------
-            Image<Bgr,byte> register_Puzzle = image.ToImage<Bgr, byte>();
+            Image<Bgr,byte> register_Puzzle = image.Clone();
 
             VisualSystem.ExtendColor(register_Puzzle,register_Puzzle);
             VisualSystem.WhiteBalance(register_Puzzle,register_Puzzle);
 
             long matchTime;
             long score;
-            RecognizeResult result= MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
+            RecognizeResult result = MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
 
             //-------------------------------------------------------------------------------------
             /*
@@ -95,7 +77,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             int x_P = (int)Math.Abs(result.pts[2].X + result.pts[3].X) / 2;
             int y_P = (int)Math.Abs(result.pts[0].Y + result.pts[3].Y) / 2;
 
-            if (Math.Abs(result.Angel) == 90)
+            if (Math.Abs(result.Angle) == 90)
             {
                 x_P = (int)Math.Abs(result.pts[3].X + result.pts[0].X) / 2;
                 y_P = (int)Math.Abs(result.pts[1].Y + result.pts[0].Y) / 2;
@@ -108,13 +90,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             { x = 6; }
             if (y >= 5)
             { y = 4; }
+            result.position=y.ToString() + x.ToString();
 
+            /*
             Puzzle_sturct register = new Puzzle_sturct();
-            register.image = register_Puzzle.Clone();
-
             register.coordinate = coordinate;
             register.position = y.ToString() + x.ToString();
-            register.Angel = result.Angel + angle;
+            register.Angel = result.Angle + angle;
 
             register_Puzzle.Dispose();
             //register.puzzle_region = Puzzle[i].puzzle_region;
@@ -122,6 +104,81 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //register.image.Save(path_image_folder + "test" + i.ToString() + "_" + register.position + ".jpg");
 
             return register;
+            */
+
+            /*
+            foreach (var k in Check_Error_Index)
+            {
+                Puzzle.RemoveAt(k);6
+            }
+
+            time.Stop();
+            long Time = time.ElapsedMilliseconds;
+            */
+
+            //return Time;
+            return result; 
+        }
+        
+        private RecognizeResult doSingleRecognize(Mat modelImage,Mat image)
+        {
+            //Puzzle[i].image.Dispose();
+            //-------------------------------------------------------------------------------------
+            //Image<Bgr, byte> register_Puzzle = new Image<Bgr, byte>($@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\Tzu-Fu\HIWIN_Robot_13th_puzzle\Images\{i}.jpg");
+            //result Answer = Test(Puzzle[i].image, Whole_Inside_Puzzle);
+            //-------------------------------------------------------------------------------------
+            Image<Bgr,byte> register_Puzzle = image.ToImage<Bgr, byte>();
+
+            VisualSystem.ExtendColor(register_Puzzle,register_Puzzle);
+            VisualSystem.WhiteBalance(register_Puzzle,register_Puzzle);
+
+            long matchTime;
+            long score;
+            RecognizeResult result = MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
+
+            //-------------------------------------------------------------------------------------
+            /*
+            if (Answer.image == null || Answer.pts == null)
+            {
+                Check_Error_Index.Add(i);
+                continue;
+            }
+            */
+            
+
+            int x_P = (int)Math.Abs(result.pts[2].X + result.pts[3].X) / 2;
+            int y_P = (int)Math.Abs(result.pts[0].Y + result.pts[3].Y) / 2;
+
+            if (Math.Abs(result.Angle) == 90)
+            {
+                x_P = (int)Math.Abs(result.pts[3].X + result.pts[0].X) / 2;
+                y_P = (int)Math.Abs(result.pts[1].Y + result.pts[0].Y) / 2;
+            }
+
+            int x = (int)x_P / (modelImage.Width / 7);
+            int y = (int)y_P / (modelImage.Height / 5);
+
+            if (x >= 7)
+            { x = 6; }
+            if (y >= 5)
+            { y = 4; }
+            result.position=y.ToString() + x.ToString();
+
+            /*
+            Puzzle_sturct register = new Puzzle_sturct();
+            register.coordinate = coordinate;
+            register.position = y.ToString() + x.ToString();
+            register.Angel = result.Angle + angle;
+
+            register_Puzzle.Dispose();
+            //register.puzzle_region = Puzzle[i].puzzle_region;
+
+            //register.image.Save(path_image_folder + "test" + i.ToString() + "_" + register.position + ".jpg");
+
+            return register;
+            */
+
+            return result;
         }
 
         //四捨五入至想要位數
@@ -201,7 +258,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                         if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
                         { Check_Image_Bool = true; }
 
-                        result_.Angel = Angel;
+                        result_.Angle = Angel;
 
                         #region draw the projected region on the image
                         //Draw the matched keypoints
