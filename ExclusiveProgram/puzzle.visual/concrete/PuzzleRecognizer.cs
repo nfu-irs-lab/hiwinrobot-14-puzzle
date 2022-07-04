@@ -80,7 +80,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             long matchTime;
             long score;
-            RecognizeResult Answer= MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
+            RecognizeResult result= MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
 
             //-------------------------------------------------------------------------------------
             /*
@@ -92,13 +92,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             */
             
 
-            int x_P = (int)Math.Abs(Answer.pts[2].X + Answer.pts[3].X) / 2;
-            int y_P = (int)Math.Abs(Answer.pts[0].Y + Answer.pts[3].Y) / 2;
+            int x_P = (int)Math.Abs(result.pts[2].X + result.pts[3].X) / 2;
+            int y_P = (int)Math.Abs(result.pts[0].Y + result.pts[3].Y) / 2;
 
-            if (Math.Abs(Answer.Angel) == 90)
+            if (Math.Abs(result.Angel) == 90)
             {
-                x_P = (int)Math.Abs(Answer.pts[3].X + Answer.pts[0].X) / 2;
-                y_P = (int)Math.Abs(Answer.pts[1].Y + Answer.pts[0].Y) / 2;
+                x_P = (int)Math.Abs(result.pts[3].X + result.pts[0].X) / 2;
+                y_P = (int)Math.Abs(result.pts[1].Y + result.pts[0].Y) / 2;
             }
 
             int x = (int)x_P / (modelImage.Width / 7);
@@ -114,7 +114,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             register.coordinate = coordinate;
             register.position = y.ToString() + x.ToString();
-            register.Angel = Answer.Angel + angle;
+            register.Angel = result.Angel + angle;
 
             register_Puzzle.Dispose();
             //register.puzzle_region = Puzzle[i].puzzle_region;

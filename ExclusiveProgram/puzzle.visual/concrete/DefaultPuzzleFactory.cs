@@ -15,7 +15,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private IPuzzleRecognizer recognizer;
         private IPuzzleLocator locator;
         private IPuzzleCorrector corrector;
-
+        private PuzzleFactoryListener listener;
 
         public DefaultPuzzleFactory(IPuzzleLocator locator,IPuzzleRecognizer recognizer, IPuzzleCorrector corrector)
         {
@@ -27,6 +27,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         {
             var image = input.Clone();
             List<LocationResult> dataList = locator.Locate(image);
+            if(listener != null)
+                listener.onLocated(dataList);
 
             List<CorrectedPuzzleArgument> arguments = new List<CorrectedPuzzleArgument>();
             foreach (LocationResult location in dataList)
@@ -41,9 +43,30 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 argument.Size = location.Size;
                 arguments.Add(argument);
             }
+            
+            List<Image<Bgr,byte>> correctedImages = new List<Image<Bgr, byte>>();
+
+            foreach(var arg in arguments)
+            {
+                correctedImages.Add(arg.image);
+            }
+
+            if (listener != null)
+                listener.onCorrected(correctedImages);
 
             image.Dispose();
-            return recognizer.Recognize(arguments);
+
+            var recognized_result=recognizer.Recognize(arguments);
+
+            if (listener != null)
+                listener.onRecognized(recognized_result);
+
+            return recognized_result;
+        }
+
+        public void setListener(PuzzleFactoryListener listener)
+        {
+            this.listener = listener;
         }
     }
 }

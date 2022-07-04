@@ -23,7 +23,7 @@ namespace ExclusiveProgram
         private void button1_Click(object sender, EventArgs e)
         {
             corrector_binarization_puzzleView.Controls.Clear();
-            recognizer_puzzleView.Controls.Clear();
+            corrector_result_puzzleView.Controls.Clear();
             corrector_ROI_puzzleView.Controls.Clear();
 
             var minSize = new Size((int)min_width_numeric.Value,(int)min_height_numeric.Value);
@@ -42,6 +42,8 @@ namespace ExclusiveProgram
             var recognizer = new PuzzleRecognizer(modelImage);
 
             var factory = new DefaultPuzzleFactory(locator,recognizer,corrector);
+            factory.setListener(new MyFactoryListener(this));
+
             var image = VisualSystem.LoadImageFromFile(file_path.Text);
 
             capture_preview.Image = image.ToBitmap();
@@ -54,12 +56,6 @@ namespace ExclusiveProgram
                     //Point StartPoint = new Point((int)(location.Coordinate.X - (location.Size.Width / 2.0f)), (int)(location.Coordinate.Y - (location.Size.Height / 2.0f)));
                     //CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, location.Size.Width, location.Size.Height), new MCvScalar(0, 0, 255), 3);
                     //CvInvoke.PutText(showImage, "Angle:" + location.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
-                    var co = new UserControl1();
-                    co.setImage(result.image.ToBitmap());
-                    co.setLabel(result.Angel + "", result.coordinate.ToString());
-                    //p.Image = VisualSystem.Mat2Image<Bgr>(result.image).ToBitmap();
-                    recognizer_puzzleView.Controls.Add(co);
-
                     Console.WriteLine("" + result.position);
                 }
             }catch (Exception ex)
@@ -171,6 +167,35 @@ namespace ExclusiveProgram
             public void onPreprocessDone(Image<Gray, byte> result)
             {
                 ui.capture_binarization_preview.Image=result.ToBitmap();
+            }
+        }
+
+        private class MyFactoryListener : PuzzleFactoryListener
+        {
+
+            public MyFactoryListener(Control ui)
+            {
+                this.ui = ui;
+            }
+
+            private readonly Control ui;
+            public void onCorrected(List<Image<Bgr, byte>> results)
+            {
+                foreach(var image in results)
+                {
+                    var control = new UserControl1();
+                    control.setImage(image.ToBitmap());
+                    control.setLabel("","");
+                    ui.corrector_result_puzzleView.Controls.Add(control);
+                }
+            }
+
+            public void onLocated(List<LocationResult> results)
+            {
+            }
+
+            public void onRecognized(List<Puzzle_sturct> results)
+            {
             }
         }
 

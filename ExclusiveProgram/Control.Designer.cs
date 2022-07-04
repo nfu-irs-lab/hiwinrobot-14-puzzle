@@ -59,7 +59,7 @@
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.corrector_binarization_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
             this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.recognizer_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
+            this.corrector_result_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_threshold)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -438,7 +438,7 @@
             // 
             // tabPage5
             // 
-            this.tabPage5.Controls.Add(this.recognizer_puzzleView);
+            this.tabPage5.Controls.Add(this.corrector_result_puzzleView);
             this.tabPage5.Location = new System.Drawing.Point(4, 22);
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
@@ -447,13 +447,13 @@
             this.tabPage5.Text = "拼圖校正-結果";
             this.tabPage5.UseVisualStyleBackColor = true;
             // 
-            // recognizer_puzzleView
+            // corrector_result_puzzleView
             // 
-            this.recognizer_puzzleView.AutoScroll = true;
-            this.recognizer_puzzleView.Location = new System.Drawing.Point(4, 3);
-            this.recognizer_puzzleView.Name = "recognizer_puzzleView";
-            this.recognizer_puzzleView.Size = new System.Drawing.Size(1044, 353);
-            this.recognizer_puzzleView.TabIndex = 10;
+            this.corrector_result_puzzleView.AutoScroll = true;
+            this.corrector_result_puzzleView.Location = new System.Drawing.Point(4, 3);
+            this.corrector_result_puzzleView.Name = "corrector_result_puzzleView";
+            this.corrector_result_puzzleView.Size = new System.Drawing.Size(1044, 353);
+            this.corrector_result_puzzleView.TabIndex = 10;
             // 
             // Control
             // 
@@ -515,7 +515,7 @@
         private System.Windows.Forms.FlowLayoutPanel corrector_ROI_puzzleView;
         private System.Windows.Forms.FlowLayoutPanel corrector_binarization_puzzleView;
         private System.Windows.Forms.TabPage tabPage5;
-        private System.Windows.Forms.FlowLayoutPanel recognizer_puzzleView;
+        private System.Windows.Forms.FlowLayoutPanel corrector_result_puzzleView;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.PictureBox capture_preview;
     }
