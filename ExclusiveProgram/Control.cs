@@ -65,6 +65,7 @@ namespace ExclusiveProgram
             }catch (Exception ex)
             {
                 Console.WriteLine("Error:"+ex.Message);
+                MessageBox.Show(ex.Message,"辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
