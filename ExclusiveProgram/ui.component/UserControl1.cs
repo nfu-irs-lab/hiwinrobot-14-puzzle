@@ -21,10 +21,10 @@ namespace ExclusiveProgram.ui.component
         { 
             pictureBox1.Image = bitmap;
         }
-        public void setLabel(double angle,Point point)
+        public void setLabel(String label1,String label2)
         { 
-            label1.Text=angle.ToString();
-            label2.Text=point.ToString();   
+            this.label1.Text=label1;
+            this.label2.Text=label2;   
         }
     }
 

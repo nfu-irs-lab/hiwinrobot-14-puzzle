@@ -19,23 +19,37 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
         //是否獲得HSV、ROI區域與是否開燈
         private bool GetWholePuzzle = false;
+        private PuzzleLocatorListener listener;
         private readonly Size minSize;
         private readonly Size maxSize;
+        private readonly int threshold;
 
-        public PuzzleLocator(Size minSize, Size maxSize)
+        public PuzzleLocator(int threshold,Size minSize, Size maxSize)
         {
             this.minSize = minSize;
             this.maxSize = maxSize;
+            this.threshold = threshold;
         }
 
 
-        public List<LocationResult> Locate(Image<Gray, byte> input)
+        public List<LocationResult> Locate(Image<Bgr, byte> input)
         {
+            var dst = ColorImagePreprocess(input);
+            var bin = BinaryImagePreprocess(dst);
+
+            //定義結構元素
+            Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
+            //Erode:侵蝕，Dilate:擴張
+            CvInvoke.Dilate(bin, bin, Struct_element, new Point(1, 1), 6, BorderType.Default, new MCvScalar(0, 0, 0));
+            CvInvoke.Erode(bin, bin, Struct_element, new Point(-1, -1), 3, BorderType.Default, new MCvScalar(0, 0, 0));
+
+            if (listener != null)
+                listener.onPreprocessDone(bin);
 
             List<LocationResult> puzzleDataList = new List<LocationResult>();
 
             //取得輪廓組套件
-            VectorOfVectorOfPoint contours = findContours(input);
+            VectorOfVectorOfPoint contours = findContours(bin);
             //尋遍輪廓組之單一輪廓
             for (int i = 0; i < contours.Size; i++)
             {
@@ -71,6 +85,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     puzzleData.Coordinate = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);
                     puzzleDataList.Add(puzzleData);
+                    if (listener != null)
+                        listener.onLocated(puzzleData);
                 }
 
             }
@@ -156,6 +172,27 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
 
             return Angel;
+        }
+
+        private Image<Bgr,byte> ColorImagePreprocess(Image<Bgr,byte> image)
+        {
+            var dst = new Image<Bgr, byte>(image.Size);
+            VisualSystem.WhiteBalance(image,dst);
+            VisualSystem.ExtendColor(dst,dst);
+            CvInvoke.MedianBlur(dst, dst, 27);
+            return dst;
+        }
+        private Image<Gray,byte> BinaryImagePreprocess(Image<Bgr,byte> image)
+        {
+            var bin=new Image<Gray, byte>(image.Size);
+            CvInvoke.CvtColor(image, bin, ColorConversion.Bgr2Gray);
+            CvInvoke.Threshold(bin, bin,threshold, 255, ThresholdType.Binary);
+            return bin;
+        }
+
+        public void setListener(PuzzleLocatorListener listener)
+        {
+            this.listener = listener;
         }
     }
 }

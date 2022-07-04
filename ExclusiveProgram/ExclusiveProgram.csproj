@@ -132,10 +132,12 @@
     <Compile Include="puzzle.visual\concrete\PuzzleCorrector.cs" />
     <Compile Include="puzzle.visual\concrete\PuzzleLocator.cs" />
     <Compile Include="puzzle.visual\concrete\PuzzleRecognizer.cs" />
+    <Compile Include="puzzle.visual\concrete\PuzzleResultMerger.cs" />
     <Compile Include="puzzle.visual\framework\IPuzzleFactory.cs" />
     <Compile Include="puzzle.visual\framework\IPuzzleCorrector.cs" />
     <Compile Include="puzzle.visual\framework\IPuzzleLocator.cs" />
     <Compile Include="puzzle.visual\framework\IPuzzleRecognizer.cs" />
+    <Compile Include="puzzle.visual\framework\IPuzzleResultMerger.cs" />
     <Compile Include="ui.component\UserControl1.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -9,6 +9,14 @@ using System.Threading.Tasks;
 
 namespace ExclusiveProgram.puzzle.visual.framework
 {
+    
+    public interface PuzzleLocatorListener
+    {
+        void onBinarizationDone(Image<Gray, byte> result);
+        void onPreprocessDone(Image<Gray, byte> result);
+
+        void onLocated(LocationResult result);
+    }
 
     public struct LocationResult
     {
@@ -19,6 +27,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
 
     public interface IPuzzleLocator
     {
-        List<LocationResult> Locate(Image<Gray, byte> input);
+        List<LocationResult> Locate(Image<Bgr, byte> input);
+        void setListener(PuzzleLocatorListener listener);
     }
 }

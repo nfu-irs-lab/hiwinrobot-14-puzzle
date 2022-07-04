@@ -11,11 +11,15 @@ namespace ExclusiveProgram.puzzle.visual.concrete
     public class PuzzleCorrector : IPuzzleCorrector
     {
         private readonly int thereshold;
-        public PuzzleCorrector(int Thereshold)
+        private readonly Bgr backgroundColor;
+        private PuzzleCorrectorListener listener;
+
+        public PuzzleCorrector(int Thereshold,Color backgroundColor)
         {
             thereshold = Thereshold;
+            this.backgroundColor = new Bgr(backgroundColor);
         }
-
+        int id;
         public Image<Bgr, byte> Correct(Image<Bgr, byte> input, LocationResult raw)
         {
             Rectangle rect = new Rectangle((int)(raw.Coordinate.X - raw.Size.Width / 2.0f), (int)(raw.Coordinate.Y - raw.Size.Height / 2.0f), raw.Size.Width, raw.Size.Height);
@@ -24,6 +28,10 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             //將ROI選取區域使用Mat型式讀取
             Image<Bgr, byte> Copy_ = new Mat(Ori_img, rect).ToImage<Bgr, byte>();
+            if (listener != null)
+            {
+                listener.onROIDetected(Copy_,raw);
+            }
 
             //獲得矩形長寬
             int Rotate_newImg_x = rect.Width,
@@ -33,7 +41,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             double Lenght = Math.Sqrt((Rotate_newImg_x * Rotate_newImg_x) + (Rotate_newImg_y * Rotate_newImg_y));
 
             //創造 【邊長為對角線長】(後續處理方便)的擴大版圖片
-            Image<Bgr, byte> new_img = new Image<Bgr, byte>((int)Lenght, (int)Lenght, new Bgr(Color.Green));
+            Image<Bgr, byte> new_img = new Image<Bgr, byte>((int)Lenght, (int)Lenght,backgroundColor);
 
             //ROI設定，須為→(中心-(邊長/2))，為了將圖片放到中央
             new_img.ROI = new Rectangle(new Point(((int)Lenght - Rotate_newImg_x) / 2, ((int)Lenght - Rotate_newImg_y) / 2), new Size(Rotate_newImg_x, Rotate_newImg_y));
@@ -46,7 +54,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             new_img.ROI = Rectangle.Empty;
 
             //將圖片旋轉(矯正[rectify]用)，旋轉出邊界顏色使用ROI_HSV值轉RGB(後續處理方便)
-            new_img = new_img.Rotate(raw.Angle, new Bgr(Color.Green));
+            new_img = new_img.Rotate(raw.Angle, backgroundColor);
 
             //new_ing._EqualizeHist();
             //進一步縮小圖片
@@ -72,14 +80,22 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                         Out.Data[i, j, 0] = 0;
                 }
             }
+            if(listener!=null)
+                listener.onBinarizationDone(Out);
+
             //定義結構元素
             Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
 
             //Erode:侵蝕，Dilate:擴張
             CvInvoke.Dilate(Out, Out, Struct_element, new Point(1, 1), 6, BorderType.Default, new MCvScalar(0, 0, 0));
             CvInvoke.Erode(Out, Out, Struct_element, new Point(-1, -1), 3, BorderType.Default, new MCvScalar(0, 0, 0));
+
+            if(listener!=null)
+                listener.onPreprocessDone(Out);
+
             //尋找輪廓
             CvInvoke.FindContours(Out, contours, null, RetrType.External, ChainApproxMethod.ChainApproxSimple);
+
 
             int max_size=-1;
             Rectangle max_size_rectangle=new Rectangle(new Point(-1,-1),new Size(0,0));
@@ -108,6 +124,11 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //儲存圖片
             //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");
             return VisualSystem.Mat2Image<Bgr>(new_img_Save);
+        }
+
+        public void setListener(PuzzleCorrectorListener listener)
+        {
+            this.listener=listener; 
         }
 
     }
