@@ -144,7 +144,7 @@ namespace ExclusiveProgram
             {
                 var control = new UserControl1();
                 control.setImage(result.ToBitmap());
-                control.setLabel(locationResult.Coordinate.ToString(),""+locationResult.Angle);
+                control.setLabel(locationResult.Size.ToString(),""+locationResult.Angle);
                 this.ui.corrector_ROI_puzzleView.Controls.Add(control);
             }
         }
@@ -165,6 +165,7 @@ namespace ExclusiveProgram
 
             public void onLocated(LocationResult result)
             {
+
             }
 
             public void onPreprocessDone(Image<Gray, byte> result)

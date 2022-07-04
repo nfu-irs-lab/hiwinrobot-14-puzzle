@@ -51,6 +51,8 @@
             this.file_path = new System.Windows.Forms.TextBox();
             this.button2 = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.capture_preview = new System.Windows.Forms.PictureBox();
             this.capture_binarization_preview = new System.Windows.Forms.PictureBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.corrector_ROI_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
@@ -58,8 +60,6 @@
             this.corrector_binarization_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.recognizer_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.capture_preview = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_threshold)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -70,12 +70,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.min_width_numeric)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.min_height_numeric)).BeginInit();
             this.tabPage2.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.capture_preview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.capture_binarization_preview)).BeginInit();
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.capture_preview)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
@@ -101,7 +101,7 @@
             this.numericUpDown_threshold.Size = new System.Drawing.Size(68, 22);
             this.numericUpDown_threshold.TabIndex = 5;
             this.numericUpDown_threshold.Value = new decimal(new int[] {
-            170,
+            165,
             0,
             0,
             0});
@@ -171,7 +171,7 @@
             this.corrector_threshold_numric.Size = new System.Drawing.Size(68, 22);
             this.corrector_threshold_numric.TabIndex = 22;
             this.corrector_threshold_numric.Value = new decimal(new int[] {
-            170,
+            165,
             0,
             0,
             0});
@@ -201,7 +201,7 @@
             this.backgroundColor_textbox.Name = "backgroundColor_textbox";
             this.backgroundColor_textbox.Size = new System.Drawing.Size(100, 22);
             this.backgroundColor_textbox.TabIndex = 19;
-            this.backgroundColor_textbox.Text = "#008000";
+            this.backgroundColor_textbox.Text = "#549368";
             this.backgroundColor_textbox.TextChanged += new System.EventHandler(this.backgroundColor_textbox_TextChanged);
             // 
             // max_width_numeric
@@ -371,6 +371,24 @@
             this.tabPage2.Text = "擷取預覽";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Controls.Add(this.capture_preview);
+            this.flowLayoutPanel1.Controls.Add(this.capture_binarization_preview);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 3);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1047, 353);
+            this.flowLayoutPanel1.TabIndex = 1;
+            // 
+            // capture_preview
+            // 
+            this.capture_preview.Location = new System.Drawing.Point(3, 3);
+            this.capture_preview.Name = "capture_preview";
+            this.capture_preview.Size = new System.Drawing.Size(496, 347);
+            this.capture_preview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.capture_preview.TabIndex = 1;
+            this.capture_preview.TabStop = false;
+            // 
             // capture_binarization_preview
             // 
             this.capture_binarization_preview.Location = new System.Drawing.Point(505, 3);
@@ -437,24 +455,6 @@
             this.recognizer_puzzleView.Size = new System.Drawing.Size(1044, 353);
             this.recognizer_puzzleView.TabIndex = 10;
             // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Controls.Add(this.capture_preview);
-            this.flowLayoutPanel1.Controls.Add(this.capture_binarization_preview);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 3);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1047, 353);
-            this.flowLayoutPanel1.TabIndex = 1;
-            // 
-            // capture_preview
-            // 
-            this.capture_preview.Location = new System.Drawing.Point(3, 3);
-            this.capture_preview.Name = "capture_preview";
-            this.capture_preview.Size = new System.Drawing.Size(496, 347);
-            this.capture_preview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.capture_preview.TabIndex = 1;
-            this.capture_preview.TabStop = false;
-            // 
             // Control
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -474,12 +474,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.min_width_numeric)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.min_height_numeric)).EndInit();
             this.tabPage2.ResumeLayout(false);
+            this.flowLayoutPanel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.capture_preview)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.capture_binarization_preview)).EndInit();
             this.tabPage3.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             this.tabPage5.ResumeLayout(false);
-            this.flowLayoutPanel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.capture_preview)).EndInit();
             this.ResumeLayout(false);
 
         }

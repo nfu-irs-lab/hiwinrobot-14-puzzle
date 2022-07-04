@@ -80,7 +80,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             long matchTime;
             long score;
-            RecognizeResult Answer= Draw(register_Puzzle.Mat,modelImage, out matchTime, out score);
+            RecognizeResult Answer= MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
 
             //-------------------------------------------------------------------------------------
             /*
@@ -131,6 +131,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         }
 
 
+        int a = 0;
+
         /// <summary>
         /// Draw the model image and observed image, the matched features and homography projection.
         /// </summary>
@@ -138,7 +140,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         /// <param name="observedImage">The observed image</param>
         /// <param name="matchTime">The output total time for computing the homography matrix.</param>
         /// <returns>The model image and observed image, the matched features and homography projection.</returns>
-        private RecognizeResult Draw(Mat observedImage,Mat modelImage, out long matchTime, out long score)
+        private RecognizeResult MatchFeaturePoints(Mat observedImage,Mat modelImage, out long matchTime, out long score)
         {
             RecognizeResult result_ = new RecognizeResult();
             Mat homography;
@@ -146,14 +148,15 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             VectorOfKeyPoint observedKeyPoints = new VectorOfKeyPoint();
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
             {
+                CvInvoke.Imshow("ModelImage",modelImage);
                 Mat mask;
                 FindMatch(modelImage, observedImage, out matchTime, modelKeyPoints, observedKeyPoints, matches,
                    out mask, out homography, out score);
 
                 //Draw the matched keypoints
-                Mat result = new Mat();
+                Mat resultImage = new Mat();
                 Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
-                   matches, result, new MCvScalar(255, 255, 255), new MCvScalar(255, 255, 255), mask);
+                   matches, resultImage, new MCvScalar(0, 0, 255), new MCvScalar(255, 255, 255), mask);
 
                 #region draw the projected region on the image
 
@@ -178,7 +181,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 #endif
                     using (VectorOfPoint vp = new VectorOfPoint(points))
                     {
-                        CvInvoke.Polylines(result, vp, true, new MCvScalar(255, 0, 0, 255), 5);
+                        //CvInvoke.Polylines(resultImage, vp, true, new MCvScalar(255, 0, 0, 255), 5);
                         double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
                         double Angel = Round((int)Slope, 1);
 
@@ -204,9 +207,10 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                         if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
                         { Check_Image_Bool = true; }
 
-                        CvInvoke.PutText(result, string.Format("{0}ms , {1:0.00}", matchTime, Slope), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 3, LineType.FourConnected);
+                        CvInvoke.PutText(resultImage, string.Format("{0}ms , {1:0.00}", matchTime, Slope), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 3, LineType.FourConnected);
                         result_.Angel = Angel;
-                        result_.image = result.ToImage<Bgr,byte>();
+                        result_.image = resultImage.ToImage<Bgr,byte>();
+                        CvInvoke.Imshow("A"+a++,resultImage);
                     }
                 }
 
@@ -238,8 +242,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 featureDetector.DetectAndCompute(observedImage, null, observedKeyPoints, observedDescriptors, false);
 
                 // KdTree for faster results / less accuracy
-                using (var ip = new Emgu.CV.Flann.KdTreeIndexParams())
-                using (var sp = new SearchParams())
+                using (var ip = new Emgu.CV.Flann.KdTreeIndexParams(10))
+                using (var sp = new SearchParams(200))
+
                 using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
                 {
                     matcher.Add(modelDescriptors);
@@ -272,5 +277,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             }
             matchTime = watch.ElapsedMilliseconds;
         }
+
+
     }
 }
