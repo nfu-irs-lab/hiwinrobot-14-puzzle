@@ -45,20 +45,26 @@ namespace ExclusiveProgram
             var image = VisualSystem.LoadImageFromFile(file_path.Text);
 
             capture_preview.Image = image.ToBitmap();
-            List<Puzzle_sturct> results = factory.Execute(image);
-
-            foreach (Puzzle_sturct result in results)
+            try
             {
-                //Point StartPoint = new Point((int)(location.Coordinate.X - (location.Size.Width / 2.0f)), (int)(location.Coordinate.Y - (location.Size.Height / 2.0f)));
-                //CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, location.Size.Width, location.Size.Height), new MCvScalar(0, 0, 255), 3);
-                //CvInvoke.PutText(showImage, "Angle:" + location.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
-                var co= new UserControl1();
-                co.setImage(result.image.ToBitmap());
-                co.setLabel(result.Angel+"", result.coordinate.ToString());
-                //p.Image = VisualSystem.Mat2Image<Bgr>(result.image).ToBitmap();
-                recognizer_puzzleView.Controls.Add(co);
+                List<Puzzle_sturct> results = factory.Execute(image);
 
-                Console.WriteLine("" + result.position);
+                foreach (Puzzle_sturct result in results)
+                {
+                    //Point StartPoint = new Point((int)(location.Coordinate.X - (location.Size.Width / 2.0f)), (int)(location.Coordinate.Y - (location.Size.Height / 2.0f)));
+                    //CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, location.Size.Width, location.Size.Height), new MCvScalar(0, 0, 255), 3);
+                    //CvInvoke.PutText(showImage, "Angle:" + location.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
+                    var co = new UserControl1();
+                    co.setImage(result.image.ToBitmap());
+                    co.setLabel(result.Angel + "", result.coordinate.ToString());
+                    //p.Image = VisualSystem.Mat2Image<Bgr>(result.image).ToBitmap();
+                    recognizer_puzzleView.Controls.Add(co);
+
+                    Console.WriteLine("" + result.position);
+                }
+            }catch (Exception ex)
+            {
+                Console.WriteLine("Error:"+ex.Message);
             }
         }
 

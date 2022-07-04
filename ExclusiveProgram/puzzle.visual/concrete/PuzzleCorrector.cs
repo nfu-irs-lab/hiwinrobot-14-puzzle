@@ -66,7 +66,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             Image<Gray, byte> Out = new Image<Gray, byte>(new_img.Size);
 
-
+            CvInvoke.CvtColor(new_img, Out,ColorConversion.Bgr2Gray);
+            CvInvoke.Threshold(Out, Out, thereshold,255,ThresholdType.Binary);
+            /*
             for (int i = 0; i < new_img.Rows; i++)
             {
                 for (int j = 0; j < new_img.Cols; j++)
@@ -80,6 +82,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                         Out.Data[i, j, 0] = 0;
                 }
             }
+            */
             if(listener!=null)
                 listener.onBinarizationDone(Out);
 
