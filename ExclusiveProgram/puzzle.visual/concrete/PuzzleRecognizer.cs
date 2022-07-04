@@ -132,6 +132,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
 
         int a = 0;
+        private PuzzleRecognizerListener listener;
 
         /// <summary>
         /// Draw the model image and observed image, the matched features and homography projection.
@@ -148,17 +149,10 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             VectorOfKeyPoint observedKeyPoints = new VectorOfKeyPoint();
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
             {
-                CvInvoke.Imshow("ModelImage",modelImage);
                 Mat mask;
                 FindMatch(modelImage, observedImage, out matchTime, modelKeyPoints, observedKeyPoints, matches,
                    out mask, out homography, out score);
 
-                //Draw the matched keypoints
-                Mat resultImage = new Mat();
-                Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
-                   matches, resultImage, new MCvScalar(0, 0, 255), new MCvScalar(255, 255, 255), mask);
-
-                #region draw the projected region on the image
 
                 if (homography != null)
                 {
@@ -207,14 +201,17 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                         if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
                         { Check_Image_Bool = true; }
 
-                        CvInvoke.PutText(resultImage, string.Format("{0}ms , {1:0.00}", matchTime, Slope), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 3, LineType.FourConnected);
                         result_.Angel = Angel;
-                        result_.image = resultImage.ToImage<Bgr,byte>();
-                        CvInvoke.Imshow("A"+a++,resultImage);
+
+                        #region draw the projected region on the image
+                        //Draw the matched keypoints
+                        if (listener != null)
+                            listener.OnMatched(modelImage.ToImage<Bgr,byte>(), modelKeyPoints, observedImage.ToImage<Bgr,byte>(), observedKeyPoints,matches, mask,matchTime,Slope);
+                        #endregion draw the projected region on the image
                     }
+
                 }
 
-                #endregion draw the projected region on the image
 
                 return result_;
             }
@@ -278,6 +275,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             matchTime = watch.ElapsedMilliseconds;
         }
 
-
+        public void setListener(PuzzleRecognizerListener listener)
+        {
+            this.listener = listener;
+        }
     }
 }

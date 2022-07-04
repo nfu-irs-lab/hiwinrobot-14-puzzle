@@ -4,7 +4,10 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using ExclusiveProgram.puzzle.visual.concrete;
 using ExclusiveProgram.puzzle.visual.framework;
 using ExclusiveProgram.ui.component;
@@ -40,6 +43,7 @@ namespace ExclusiveProgram
 
             var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage.jpg");
             var recognizer = new PuzzleRecognizer(modelImage);
+            recognizer.setListener(new MyRecognizeListener(this));
 
             var factory = new DefaultPuzzleFactory(locator,recognizer,corrector);
             factory.setListener(new MyFactoryListener(this));
@@ -167,6 +171,37 @@ namespace ExclusiveProgram
             public void onPreprocessDone(Image<Gray, byte> result)
             {
                 ui.capture_binarization_preview.Image=result.ToBitmap();
+            }
+        }
+
+        private class MyRecognizeListener : PuzzleRecognizerListener
+        {
+            int index = 0;
+            public MyRecognizeListener (Control ui)
+            {
+                this.ui = ui;
+            }
+
+            private readonly Control ui;
+
+            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double slope)
+            {
+                Mat resultImage = new Mat();
+                Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
+                   matches, resultImage, new MCvScalar(0, 0, 255), new MCvScalar(255, 255, 255), mask);
+                CvInvoke.PutText(resultImage, string.Format("{0}ms , {1:0.00}", matchTime, slope), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
+
+                resultImage.Save("matching_results\\"+index+++".jpg");
+                resultImage.Dispose();
+
+                /*
+                PictureBox pictureBox=new PictureBox();
+                pictureBox.Size = new Size(500, 347);
+                pictureBox.SizeMode=PictureBoxSizeMode.StretchImage;
+                pictureBox.Image=resultImage.ToImage<Bgr,byte>().ToBitmap();
+                ui.recognize_match_puzzleView.Controls.Add(pictureBox);
+                */
+
             }
         }
 

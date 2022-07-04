@@ -12,7 +12,6 @@ namespace ExclusiveProgram.puzzle.visual.framework
     
     public interface PuzzleLocatorListener
     {
-        void onBinarizationDone(Image<Gray, byte> result);
         void onPreprocessDone(Image<Gray, byte> result);
 
         void onLocated(LocationResult result);

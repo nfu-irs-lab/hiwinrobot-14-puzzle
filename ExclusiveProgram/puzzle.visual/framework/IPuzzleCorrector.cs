@@ -13,7 +13,6 @@ namespace ExclusiveProgram.puzzle.visual.framework
     {
 
         void onROIDetected(Image<Bgr, byte> result,LocationResult locationResult);
-        void onBinarizationDone(Image<Gray, byte> result);
         void onPreprocessDone(Image<Gray, byte> result);
         
     }

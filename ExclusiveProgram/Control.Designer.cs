@@ -60,6 +60,8 @@
             this.corrector_binarization_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.corrector_result_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
+            this.tabPage6 = new System.Windows.Forms.TabPage();
+            this.recognize_match_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_threshold)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -76,6 +78,7 @@
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
+            this.tabPage6.SuspendLayout();
             this.SuspendLayout();
             // 
             // button1
@@ -113,6 +116,7 @@
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Controls.Add(this.tabPage5);
+            this.tabControl1.Controls.Add(this.tabPage6);
             this.tabControl1.Location = new System.Drawing.Point(3, 3);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -455,6 +459,25 @@
             this.corrector_result_puzzleView.Size = new System.Drawing.Size(1044, 353);
             this.corrector_result_puzzleView.TabIndex = 10;
             // 
+            // tabPage6
+            // 
+            this.tabPage6.Controls.Add(this.recognize_match_puzzleView);
+            this.tabPage6.Location = new System.Drawing.Point(4, 22);
+            this.tabPage6.Name = "tabPage6";
+            this.tabPage6.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage6.Size = new System.Drawing.Size(1053, 359);
+            this.tabPage6.TabIndex = 5;
+            this.tabPage6.Text = "tabPage6";
+            this.tabPage6.UseVisualStyleBackColor = true;
+            // 
+            // recognize_match_puzzleView
+            // 
+            this.recognize_match_puzzleView.AutoScroll = true;
+            this.recognize_match_puzzleView.Location = new System.Drawing.Point(4, 3);
+            this.recognize_match_puzzleView.Name = "recognize_match_puzzleView";
+            this.recognize_match_puzzleView.Size = new System.Drawing.Size(1044, 353);
+            this.recognize_match_puzzleView.TabIndex = 11;
+            // 
             // Control
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -480,6 +503,7 @@
             this.tabPage3.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             this.tabPage5.ResumeLayout(false);
+            this.tabPage6.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -518,5 +542,7 @@
         private System.Windows.Forms.FlowLayoutPanel corrector_result_puzzleView;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.PictureBox capture_preview;
+        private System.Windows.Forms.TabPage tabPage6;
+        private System.Windows.Forms.FlowLayoutPanel recognize_match_puzzleView;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Emgu.CV;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -16,8 +17,8 @@ namespace ExclusiveProgram.puzzle.visual.framework
     public struct RecognizeResult
     {
         public double Angel;
-        public Image<Bgr,byte> image;
         public PointF[] pts;
+        public string position;
     };
 
     public struct Puzzle_sturct
@@ -28,9 +29,15 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public string position;
     };
 
+    public interface PuzzleRecognizerListener
+    {
+        void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double slope);
+    }
+
     public interface IPuzzleRecognizer
     {
         List<Puzzle_sturct> Recognize(List<CorrectedPuzzleArgument> input);
+        void setListener(PuzzleRecognizerListener listener);
     }
 
 }

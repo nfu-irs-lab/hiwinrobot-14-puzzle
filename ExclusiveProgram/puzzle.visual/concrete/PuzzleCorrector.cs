@@ -83,8 +83,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 }
             }
             */
-            if(listener!=null)
-                listener.onBinarizationDone(Out);
 
             //定義結構元素
             Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
