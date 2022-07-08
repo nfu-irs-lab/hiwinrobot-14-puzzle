@@ -18,35 +18,6 @@ using System.Threading.Tasks;
 namespace ExclusiveProgram.puzzle.visual.concrete
 {
 
-    public class KAZEFlannRecognizerImpl : PuzzleRecognizerImpl
-    {
-        private readonly KAZE featureDetector;
-
-        public KAZEFlannRecognizerImpl()
-        {
-            featureDetector = new KAZE();
-        }
-
-        public void DetectFeatures(Mat image, object p, VectorOfKeyPoint keyPoints, Mat descriptors, bool v)
-        {
-            featureDetector.DetectAndCompute(image, null, keyPoints, descriptors,v);
-        }
-
-        public void MatchFeatures(Mat modelDescriptors, Mat observedDescriptors, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches)
-        {
-            int k = 2;
-            // KdTree for faster results / less accuracy
-            using (var ip = new Emgu.CV.Flann.KdTreeIndexParams(20))
-            using (var sp = new SearchParams())
-            using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
-            {
-                matcher.Add(modelDescriptors);
-                matcher.KnnMatch(observedDescriptors, matches, k, null);
-            }
-
-        }
-    }
-
     public class PuzzleRecognizer : IPuzzleRecognizer
     {
         
@@ -56,11 +27,18 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private readonly Image<Bgr,byte> readOnlyModleImage;
         
         private readonly PuzzleRecognizerImpl impl;
+        private readonly double uniquenessThreshold;
 
-
-        public PuzzleRecognizer(Image<Bgr,byte> modelImage)
+        public PuzzleRecognizer()
         {
-            impl = new KAZEFlannRecognizerImpl();
+        }
+
+        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl)
+        {
+
+            this.uniquenessThreshold = uniquenessThreshold;
+            this.impl = impl;
+
             //-------------------------------------------------------------------------------------
             var clonedModelImage = modelImage.Clone();
             //樣板圖片
@@ -311,7 +289,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //{
             //}
             homography=null;
-            double uniquenessThreshold = 0.8;
             Stopwatch watch = Stopwatch.StartNew();
 
             Mat modelDescriptors = new Mat();

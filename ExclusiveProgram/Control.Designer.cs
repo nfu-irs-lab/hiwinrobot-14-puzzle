@@ -62,6 +62,8 @@
             this.corrector_result_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.recognize_match_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
+            this.label9 = new System.Windows.Forms.Label();
+            this.numericUpDown_uniqueness_threshold = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_threshold)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -79,6 +81,7 @@
             this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.tabPage6.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_uniqueness_threshold)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
@@ -125,6 +128,8 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.numericUpDown_uniqueness_threshold);
+            this.tabPage1.Controls.Add(this.label9);
             this.tabPage1.Controls.Add(this.label8);
             this.tabPage1.Controls.Add(this.corrector_threshold_numric);
             this.tabPage1.Controls.Add(this.label7);
@@ -478,6 +483,33 @@
             this.recognize_match_puzzleView.Size = new System.Drawing.Size(1044, 353);
             this.recognize_match_puzzleView.TabIndex = 11;
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("新細明體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.label9.Location = new System.Drawing.Point(551, 73);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(87, 16);
+            this.label9.TabIndex = 24;
+            this.label9.Text = "獨特性臨界";
+            // 
+            // numericUpDown_uniqueness_threshold
+            // 
+            this.numericUpDown_uniqueness_threshold.Location = new System.Drawing.Point(644, 73);
+            this.numericUpDown_uniqueness_threshold.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.numericUpDown_uniqueness_threshold.Name = "numericUpDown_uniqueness_threshold";
+            this.numericUpDown_uniqueness_threshold.Size = new System.Drawing.Size(68, 22);
+            this.numericUpDown_uniqueness_threshold.TabIndex = 25;
+            this.numericUpDown_uniqueness_threshold.Value = new decimal(new int[] {
+            85,
+            0,
+            0,
+            0});
+            // 
             // Control
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -504,6 +536,7 @@
             this.tabPage4.ResumeLayout(false);
             this.tabPage5.ResumeLayout(false);
             this.tabPage6.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_uniqueness_threshold)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -544,5 +577,7 @@
         private System.Windows.Forms.PictureBox capture_preview;
         private System.Windows.Forms.TabPage tabPage6;
         private System.Windows.Forms.FlowLayoutPanel recognize_match_puzzleView;
+        private System.Windows.Forms.NumericUpDown numericUpDown_uniqueness_threshold;
+        private System.Windows.Forms.Label label9;
     }
 }

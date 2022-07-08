@@ -33,6 +33,8 @@ namespace ExclusiveProgram
             var maxSize = new Size((int)max_width_numeric.Value,(int)max_height_numeric.Value);
             var threshold = (int)numericUpDown_threshold.Value;
             var locator = new PuzzleLocator(threshold,minSize,maxSize);
+            var uniquenessThreshold=((double)numericUpDown_uniqueness_threshold.Value)*0.01f;
+
             locator.setListener(new MyPuzzleLocatorListener(this));
 
 
@@ -42,7 +44,7 @@ namespace ExclusiveProgram
             corrector.setListener(new MyPuzzleCorrectorListener(this));
 
             var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage.jpg");
-            var recognizer = new PuzzleRecognizer(modelImage);
+            var recognizer = new PuzzleRecognizer(modelImage,uniquenessThreshold,new SiftFlannPuzzleRecognizerImpl());
             recognizer.setListener(new MyRecognizeListener(this));
 
             var factory = new DefaultPuzzleFactory(locator,recognizer,corrector,new PuzzleResultMerger());
@@ -193,7 +195,6 @@ namespace ExclusiveProgram
 
                 resultImage.Save("matching_results\\"+index+++".jpg");
                 resultImage.Dispose();
-
                 /*
                 PictureBox pictureBox=new PictureBox();
                 pictureBox.Size = new Size(500, 347);
