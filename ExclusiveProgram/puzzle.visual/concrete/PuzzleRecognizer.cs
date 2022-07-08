@@ -16,7 +16,56 @@ using System.Threading.Tasks;
 namespace ExclusiveProgram.puzzle.visual.concrete
 {
 
+    public class KAZEFlannRecognizerImpl : PuzzleRecognizerImpl
+    {
+        public void DetectFeatures(Mat image, object p, VectorOfKeyPoint keyPoints, Mat descriptors, bool v)
+        {
 
+            KAZE featureDetector = new KAZE();
+            featureDetector.DetectAndCompute(image, null, keyPoints, descriptors,v);
+        }
+
+        public void MatchFeatures(Mat modelDescriptors, Mat observedDescriptors, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
+        {
+
+            homography = null;
+            int k = 2;
+            double uniquenessThreshold = 0.8;
+
+            // KdTree for faster results / less accuracy
+            using (var ip = new Emgu.CV.Flann.KdTreeIndexParams(20))
+            using (var sp = new SearchParams())
+
+            using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
+            {
+                matcher.Add(modelDescriptors);
+                matcher.KnnMatch(observedDescriptors, matches, k, null);
+            }
+
+            mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
+            mask.SetTo(new MCvScalar(255));
+            Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
+
+            // Calculate score based on matches size
+            // ---------------------------------------------->
+            score = 0;
+            for (int i = 0; i < matches.Size; i++)
+            {
+                if (mask.GetRawData(i)[0] == 0) continue;
+                foreach (var e in matches[i].ToArray())
+                    ++score;
+            }
+            // <----------------------------------------------
+
+            int nonZeroCount = CvInvoke.CountNonZero(mask);
+            if (nonZeroCount >= 4)
+            {
+                nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, matches, mask, 1.5, 20);
+                if (nonZeroCount >= 4)
+                    homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
+            }
+        }
+    }
 
     public class PuzzleRecognizer : IPuzzleRecognizer
     {
@@ -25,9 +74,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
         public List<int> Check_Error_Index = new List<int>();
         private readonly Image<Bgr,byte> readOnlyModleImage;
+        
+        private readonly PuzzleRecognizerImpl impl;
+
 
         public PuzzleRecognizer(Image<Bgr,byte> modelImage)
         {
+            impl = new KAZEFlannRecognizerImpl();
             //-------------------------------------------------------------------------------------
             var clonedModelImage = modelImage.Clone();
             //樣板圖片
@@ -206,7 +259,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 VectorOfKeyPoint observedKeyPoints = new VectorOfKeyPoint();
                 Mat mask;
                 Mat homography;
-                FindMatch(modelImage, observedImage, out matchTime, modelKeyPoints, observedKeyPoints, matches,
+                matchTime = FindMatch(modelImage, observedImage,modelKeyPoints, observedKeyPoints, matches,
                    out mask, out homography, out score);
 
 
@@ -271,61 +324,25 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             }
         }
 
-        private void FindMatch(Mat modelImage, Mat observedImage, out long matchTime, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
+        private long FindMatch(Mat modelImage, Mat observedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
         {
-            int k = 2;
-            double uniquenessThreshold = 0.8;
-
-            Stopwatch watch;
-            homography = null;
-
             //using (UMat uModelImage = modelImage.GetUMat(AccessType.ReadWrite))
             //using (UMat uObservedImage = observedImage.GetUMat(AccessType.ReadWrite))
-            {
-                KAZE featureDetector = new KAZE();
+            //{
+            //}
 
-                Mat modelDescriptors = new Mat();
-                featureDetector.DetectAndCompute(modelImage, null, modelKeyPoints, modelDescriptors, false);
+            Stopwatch watch = Stopwatch.StartNew();
 
-                watch = Stopwatch.StartNew();
+            Mat modelDescriptors = new Mat();
+            impl.DetectFeatures(modelImage, null, modelKeyPoints, modelDescriptors, false);
+            //featureDetector.DetectAndCompute(modelImage, null, modelKeyPoints, modelDescriptors, false);
+            
+            Mat observedDescriptors = new Mat();
+            impl.DetectFeatures(observedImage, null, observedKeyPoints, observedDescriptors, false);
+            //featureDetector.DetectAndCompute(observedImage, null, observedKeyPoints, observedDescriptors, false);
+            impl.MatchFeatures(modelDescriptors,observedDescriptors,modelKeyPoints,observedKeyPoints,matches,out mask,out homography,out score);
 
-                Mat observedDescriptors = new Mat();
-                featureDetector.DetectAndCompute(observedImage, null, observedKeyPoints, observedDescriptors, false);
-
-                // KdTree for faster results / less accuracy
-                using (var ip = new Emgu.CV.Flann.KdTreeIndexParams(20))
-                using (var sp = new SearchParams())
-
-                using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
-                {
-                    matcher.Add(modelDescriptors);
-                    matcher.KnnMatch(observedDescriptors, matches, k, null);
-                    mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
-                    mask.SetTo(new MCvScalar(255));
-                    Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
-
-                    // Calculate score based on matches size
-                    // ---------------------------------------------->
-                    score = 0;
-                    for (int i = 0; i < matches.Size; i++)
-                    {
-                        if (mask.GetRawData(i)[0] == 0) continue;
-                        foreach (var e in matches[i].ToArray())
-                            ++score;
-                    }
-                    // <----------------------------------------------
-
-                    int nonZeroCount = CvInvoke.CountNonZero(mask);
-                    if (nonZeroCount >= 4)
-                    {
-                        nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, matches, mask, 1.5, 20);
-                        if (nonZeroCount >= 4)
-                            homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
-                    }
-                }
-                watch.Stop();
-            }
-            matchTime = watch.ElapsedMilliseconds;
+            return watch.ElapsedMilliseconds;
         }
 
         public void setListener(PuzzleRecognizerListener listener)
