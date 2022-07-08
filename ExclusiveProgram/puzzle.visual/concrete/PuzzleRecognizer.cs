@@ -73,7 +73,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             }
             */
             
-
             int x_P = (int)Math.Abs(result.pts[2].X + result.pts[3].X) / 2;
             int y_P = (int)Math.Abs(result.pts[0].Y + result.pts[3].Y) / 2;
 
@@ -201,75 +200,73 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private RecognizeResult MatchFeaturePoints(Mat observedImage,Mat modelImage, out long matchTime, out long score)
         {
             RecognizeResult result_ = new RecognizeResult();
-            Mat homography;
-            VectorOfKeyPoint modelKeyPoints = new VectorOfKeyPoint();
-            VectorOfKeyPoint observedKeyPoints = new VectorOfKeyPoint();
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
             {
+                VectorOfKeyPoint modelKeyPoints = new VectorOfKeyPoint();
+                VectorOfKeyPoint observedKeyPoints = new VectorOfKeyPoint();
                 Mat mask;
+                Mat homography;
                 FindMatch(modelImage, observedImage, out matchTime, modelKeyPoints, observedKeyPoints, matches,
                    out mask, out homography, out score);
 
 
-                if (homography != null)
+                if (homography == null)
+                    throw new Exception("未檢測到特徵點");
+
+                //draw a rectangle along the projected model
+                Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
+
+                PointF[] pts = new PointF[]
                 {
-                    //draw a rectangle along the projected model
-                    Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
-
-                    PointF[] pts = new PointF[]
-                    {
-                          new PointF(rect.Left, rect.Bottom),
-                          new PointF(rect.Right, rect.Bottom),
-                          new PointF(rect.Right, rect.Top),
-                          new PointF(rect.Left, rect.Top)
-                    };
-                    pts = CvInvoke.PerspectiveTransform(pts, homography);
-                    result_.pts = pts;
+                      new PointF(rect.Left, rect.Bottom),
+                      new PointF(rect.Right, rect.Bottom),
+                      new PointF(rect.Right, rect.Top),
+                      new PointF(rect.Left, rect.Top)
+                };
+                pts = CvInvoke.PerspectiveTransform(pts, homography);
+                result_.pts = pts;
 #if NETFX_CORE
-               Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
+           Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
 #else
-                    Point[] points = Array.ConvertAll<PointF, Point>(pts, Point.Round);
+                Point[] points = Array.ConvertAll<PointF, Point>(pts, Point.Round);
 #endif
-                    using (VectorOfPoint vp = new VectorOfPoint(points))
+                using (VectorOfPoint vp = new VectorOfPoint(points))
+                {
+                    //CvInvoke.Polylines(resultImage, vp, true, new MCvScalar(255, 0, 0, 255), 5);
+                    double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
+                    double Angel = Round((int)Slope, 1);
+
+                    if (Math.Abs(Angel) > 75 && Math.Abs(Angel) < 115)
                     {
-                        //CvInvoke.Polylines(resultImage, vp, true, new MCvScalar(255, 0, 0, 255), 5);
-                        double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
-                        double Angel = Round((int)Slope, 1);
-
-                        if (Math.Abs(Angel) > 75 && Math.Abs(Angel) < 115)
-                        {
-                            if (Angel > 0)
-                            { Angel = 90; }
-                            else
-                            { Angel = -90; }
-                        }
-
-                        int w = Math.Abs(points[2].X - points[3].X);
-                        int h = Math.Abs(points[0].Y - points[3].Y);
-
-                        if (w < 50 && h < 50)
-                        {
-                            h = Math.Abs(points[3].X - points[0].X);
-                            w = Math.Abs(points[1].Y - points[0].Y);
-                        }
-
-                        int width = modelImage.Width,
-                            height = modelImage.Height;
-                        if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
-                        { Check_Image_Bool = true; }
-
-                        result_.Angle = Angel;
-
-                        #region draw the projected region on the image
-                        //Draw the matched keypoints
-                        if (listener != null)
-                            listener.OnMatched(modelImage.ToImage<Bgr,byte>(), modelKeyPoints, observedImage.ToImage<Bgr,byte>(), observedKeyPoints,matches, mask,matchTime,Slope);
-                        #endregion draw the projected region on the image
+                        if (Angel > 0)
+                        { Angel = 90; }
+                        else
+                        { Angel = -90; }
                     }
 
+                    int w = Math.Abs(points[2].X - points[3].X);
+                    int h = Math.Abs(points[0].Y - points[3].Y);
+
+                    if (w < 50 && h < 50)
+                    {
+                        h = Math.Abs(points[3].X - points[0].X);
+                        w = Math.Abs(points[1].Y - points[0].Y);
+                    }
+
+                    int width = modelImage.Width,
+                        height = modelImage.Height;
+                    if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
+                    { Check_Image_Bool = true; }
+
+                    result_.Angle = Angel;
+
+                    #region draw the projected region on the image
+                    //Draw the matched keypoints
+                    if (listener != null)
+                        listener.OnMatched(modelImage.ToImage<Bgr,byte>(), modelKeyPoints, observedImage.ToImage<Bgr,byte>(), observedKeyPoints,matches, mask,matchTime,Slope);
+                    #endregion draw the projected region on the image
+
                 }
-
-
                 return result_;
             }
         }
@@ -277,7 +274,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private void FindMatch(Mat modelImage, Mat observedImage, out long matchTime, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
         {
             int k = 2;
-            double uniquenessThreshold = 0.80;
+            double uniquenessThreshold = 0.8;
 
             Stopwatch watch;
             homography = null;
@@ -296,13 +293,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 featureDetector.DetectAndCompute(observedImage, null, observedKeyPoints, observedDescriptors, false);
 
                 // KdTree for faster results / less accuracy
-                using (var ip = new Emgu.CV.Flann.KdTreeIndexParams(10))
-                using (var sp = new SearchParams(200))
+                using (var ip = new Emgu.CV.Flann.KdTreeIndexParams(20))
+                using (var sp = new SearchParams())
 
                 using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
                 {
                     matcher.Add(modelDescriptors);
-
                     matcher.KnnMatch(observedDescriptors, matches, k, null);
                     mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
                     mask.SetTo(new MCvScalar(255));
