@@ -186,23 +186,25 @@ namespace ExclusiveProgram
 
             private readonly Control ui;
 
-            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double slope)
+            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfPoint vp, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double angle)
             {
                 Mat resultImage = new Mat();
                 Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
                    matches, resultImage, new MCvScalar(0, 0, 255), new MCvScalar(255, 255, 255), mask);
-                CvInvoke.PutText(resultImage, string.Format("{0}ms , {1:0.00}", matchTime, slope), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
+
+                CvInvoke.Polylines(resultImage, vp, true, new MCvScalar(255, 0, 0, 255), 5);
+                CvInvoke.PutText(resultImage, string.Format("{0}ms , {1:0.00}", matchTime, angle), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
 
                 resultImage.Save("matching_results\\"+index+++".jpg");
                 resultImage.Dispose();
-                /*
-                PictureBox pictureBox=new PictureBox();
-                pictureBox.Size = new Size(500, 347);
-                pictureBox.SizeMode=PictureBoxSizeMode.StretchImage;
-                pictureBox.Image=resultImage.ToImage<Bgr,byte>().ToBitmap();
-                ui.recognize_match_puzzleView.Controls.Add(pictureBox);
-                */
+            }
 
+            public void OnPerspective(Mat observedImage,Mat modelImage,Mat homography)
+            {
+                var perspective_image = new Mat(observedImage.Size,modelImage.Depth,3);
+                CvInvoke.WarpPerspective(modelImage, perspective_image, homography, observedImage.Size);
+                observedImage.Save("perspective_results\\R"+index+".jpg");
+                perspective_image.Save("perspective_results\\P"+index+".jpg");
             }
         }
 

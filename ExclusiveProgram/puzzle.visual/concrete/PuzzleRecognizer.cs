@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 /*
  * https://www.796t.com/post/OXRpbnE=.html
+ * https://www.twblogs.net/a/5cb5e690bd9eee0eff45642b
  */
 namespace ExclusiveProgram.puzzle.visual.concrete
 {
@@ -73,7 +74,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             long matchTime;
             long score;
-            RecognizeResult result = MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
+            RecognizeResult result = MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime);
 
             //-------------------------------------------------------------------------------------
             /*
@@ -143,8 +144,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             VisualSystem.WhiteBalance(register_Puzzle,register_Puzzle);
 
             long matchTime;
-            long score;
-            RecognizeResult result = MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime, out score);
+            RecognizeResult result = MatchFeaturePoints(register_Puzzle.Mat,modelImage, out matchTime);
 
             //-------------------------------------------------------------------------------------
             /*
@@ -208,7 +208,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         /// <param name="observedImage">The observed image</param>
         /// <param name="matchTime">The output total time for computing the homography matrix.</param>
         /// <returns>The model image and observed image, the matched features and homography projection.</returns>
-        private RecognizeResult MatchFeaturePoints(Mat observedImage,Mat modelImage, out long matchTime, out long score)
+        private RecognizeResult MatchFeaturePoints(Mat observedImage,Mat modelImage, out long matchTime)
         {
             RecognizeResult result_ = new RecognizeResult();
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
@@ -216,13 +216,22 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 VectorOfKeyPoint modelKeyPoints = new VectorOfKeyPoint();
                 VectorOfKeyPoint observedKeyPoints = new VectorOfKeyPoint();
                 Mat mask;
-                Mat homography;
-                matchTime = FindMatch(modelImage, observedImage,modelKeyPoints, observedKeyPoints, matches,
-                   out mask, out homography, out score);
+                matchTime = FindFeaturePointsAndMatch(modelImage, observedImage,modelKeyPoints, observedKeyPoints, matches);
 
+                mask = GetMaskFromMatches(matches);
 
-                if (homography == null)
-                    throw new Exception("未檢測到特徵點");
+                // Calculate score based on matches size
+                // ---------------------------------------------->
+                long score = 0;
+                for (int i = 0; i < matches.Size; i++)
+                {
+                    if (mask.GetRawData(i)[0] == 0) continue;
+                    foreach (var e in matches[i].ToArray())
+                        ++score;
+                }
+                // <----------------------------------------------
+
+                Mat homography = FindHomography(modelKeyPoints, observedKeyPoints, matches, mask);
 
                 //draw a rectangle along the projected model
                 Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
@@ -235,6 +244,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                       new PointF(rect.Left, rect.Top)
                 };
                 pts = CvInvoke.PerspectiveTransform(pts, homography);
+                if (listener != null)
+                    listener.OnPerspective(observedImage,modelImage,homography);
+
                 result_.pts = pts;
 #if NETFX_CORE
            Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
@@ -243,7 +255,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 #endif
                 using (VectorOfPoint vp = new VectorOfPoint(points))
                 {
-                    //CvInvoke.Polylines(resultImage, vp, true, new MCvScalar(255, 0, 0, 255), 5);
                     double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
                     double Angel = Round((int)Slope, 1);
 
@@ -274,7 +285,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     #region draw the projected region on the image
                     //Draw the matched keypoints
                     if (listener != null)
-                        listener.OnMatched(modelImage.ToImage<Bgr,byte>(), modelKeyPoints, observedImage.ToImage<Bgr,byte>(), observedKeyPoints,matches, mask,matchTime,Slope);
+                        listener.OnMatched(modelImage.ToImage<Bgr,byte>(), modelKeyPoints, observedImage.ToImage<Bgr,byte>(),vp,observedKeyPoints,matches, mask,matchTime,Angel);
                     #endregion draw the projected region on the image
 
                 }
@@ -282,13 +293,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             }
         }
 
-        private long FindMatch(Mat modelImage, Mat observedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
+        private long FindFeaturePointsAndMatch(Mat modelImage, Mat observedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches)
         {
             //using (UMat uModelImage = modelImage.GetUMat(AccessType.ReadWrite))
             //using (UMat uObservedImage = observedImage.GetUMat(AccessType.ReadWrite))
             //{
             //}
-            homography=null;
             Stopwatch watch = Stopwatch.StartNew();
 
             Mat modelDescriptors = new Mat();
@@ -299,31 +309,34 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             impl.MatchFeatures(modelDescriptors,observedDescriptors,modelKeyPoints,observedKeyPoints,matches);
 
-            mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
-            mask.SetTo(new MCvScalar(255));
+            return watch.ElapsedMilliseconds;
+        }
 
-            Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
-
-            // Calculate score based on matches size
-            // ---------------------------------------------->
-            score = 0;
-            for (int i = 0; i < matches.Size; i++)
-            {
-                if (mask.GetRawData(i)[0] == 0) continue;
-                foreach (var e in matches[i].ToArray())
-                    ++score;
-            }
-            // <----------------------------------------------
-
+        private Mat FindHomography(VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask)
+        {
             int nonZeroCount = CvInvoke.CountNonZero(mask);
             if (nonZeroCount >= 4)
             {
                 nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, matches, mask, 1.5, 20);
                 if (nonZeroCount >= 4)
-                    homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
+                {
+                    Mat homography= Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
+                    if(homography == null)
+                        throw new Exception("Matrix can not be recoverd.");
+
+                    return homography;
+                }
             }
 
-            return watch.ElapsedMilliseconds;
+            throw new Exception("No enough non-zero element.(>=4)");
+        }
+
+        private Mat GetMaskFromMatches(VectorOfVectorOfDMatch matches)
+        {
+            var mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
+            mask.SetTo(new MCvScalar(255));
+            Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
+            return mask;
         }
 
         public void setListener(PuzzleRecognizerListener listener)
