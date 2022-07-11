@@ -34,20 +34,42 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
 
             List<Puzzle_sturct> results = new List<Puzzle_sturct>();
+
+            List<Task> tasks = new List<Task>();
+
             foreach (LocationResult location in dataList)
             {
-                var correctedImage = corrector.Correct(image, location);
-                if (listener != null)
-                    listener.onCorrected(correctedImage);
+                Task task=Task.Factory.StartNew(() => { 
+                    var correctedImage = corrector.Correct(image, location);
+                    if (listener != null)
+                        listener.onCorrected(correctedImage);
 
-                var recognized_result=recognizer.Recognize(correctedImage);
-                if (listener != null)
-                    listener.onRecognized(recognized_result);
+                    var recognized_result=recognizer.Recognize(correctedImage);
+                    if (listener != null)
+                        listener.onRecognized(recognized_result);
 
-                results.Add(merger.merge(location,correctedImage,recognized_result));
+                    results.Add(merger.merge(location,correctedImage,recognized_result));
+                    image.Dispose();
+                });
+                tasks.Add(task);
+            }
+            int completed_task_count= 0;
+            int monitor= 0;
+            bool[] record=new bool[tasks.Count];
+            while (completed_task_count<tasks.Count)
+            {
+                if (tasks[monitor].IsCompleted && record[monitor] == false)
+                {
+                    completed_task_count++;
+                    record[monitor]=true;
+                }
+                if (monitor + 1 == tasks.Count)
+                    monitor = 0;
+                else
+                    monitor++;
+
             }
 
-            image.Dispose();
             return results;
         }
 

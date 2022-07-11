@@ -18,8 +18,7 @@ namespace ExclusiveProgram
     public partial class Control : MainForm.ExclusiveControl
     {
         //private VideoCapture capture;
-        private delegate void DelDoPuzzleVisual();
-
+        private delegate void DelShowResult(Puzzle_sturct puzzles);
         public Control()
         {
             InitializeComponent();
@@ -50,15 +49,15 @@ namespace ExclusiveProgram
 
         private void button1_Click(object sender, EventArgs e)
         {
+            corrector_binarization_puzzleView.Controls.Clear();
+            corrector_result_puzzleView.Controls.Clear();
+            corrector_ROI_puzzleView.Controls.Clear();
             Thread thread = new Thread(DoPuzzleVisual);
             thread.Start();
         }
 
         private void DoPuzzleVisual()
         {
-            corrector_binarization_puzzleView.Controls.Clear();
-            corrector_result_puzzleView.Controls.Clear();
-            corrector_ROI_puzzleView.Controls.Clear();
 
             var minSize = new Size((int)min_width_numeric.Value, (int)min_height_numeric.Value);
             var maxSize = new Size((int)max_width_numeric.Value, (int)max_height_numeric.Value);
@@ -91,16 +90,29 @@ namespace ExclusiveProgram
 
                 foreach (Puzzle_sturct result in results)
                 {
-                    var control = new UserControl1();
-                    control.setImage(result.image.ToBitmap());
-                    control.setLabel("Angle:" + Math.Round(result.Angel, 2), result.position);
-                    recognize_match_puzzleView.Controls.Add(control);
+                    ShowResult(result);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error:" + ex.Message);
                 MessageBox.Show(ex.Message, "辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ShowResult(Puzzle_sturct result)
+        {
+            if (this.InvokeRequired)
+            {
+                DelShowResult del = new DelShowResult(ShowResult);
+                this.Invoke(del,result);
+            }
+            else
+            {
+                var control = new UserControl1();
+                control.setImage(result.image.ToBitmap());
+                control.setLabel("Angle:" + Math.Round(result.Angel, 2), result.position);
+                recognize_match_puzzleView.Controls.Add(control);
             }
         }
 
@@ -124,7 +136,6 @@ namespace ExclusiveProgram
         private void button3_Click(object sender, EventArgs e)
         {
 
-            capture.Set(CapProp.Exposure, -4);
         }
 
         private void backgroundColor_textbox_TextChanged(object sender, EventArgs e)
@@ -259,7 +270,7 @@ namespace ExclusiveProgram
 
         private class MyFactoryListener : PuzzleFactoryListener
         {
-
+            private delegate void DelOnCorrected(Image<Bgr, byte> result);
             public MyFactoryListener(Control ui)
             {
                 this.ui = ui;
@@ -274,10 +285,18 @@ namespace ExclusiveProgram
 
             public void onCorrected(Image<Bgr, byte> result)
             {
-                var control = new UserControl1();
-                control.setImage(result.ToBitmap());
-                control.setLabel("","");
-                this.ui.corrector_result_puzzleView.Controls.Add(control);
+                if (ui.InvokeRequired)
+                {
+                    DelOnCorrected del = new DelOnCorrected(onCorrected);
+                    ui.Invoke(del,result);
+                }
+                else
+                {
+                    var control = new UserControl1();
+                    control.setImage(result.ToBitmap());
+                    control.setLabel("","");
+                    this.ui.corrector_result_puzzleView.Controls.Add(control);
+                }
             }
 
             public void onRecognized(RecognizeResult result)
