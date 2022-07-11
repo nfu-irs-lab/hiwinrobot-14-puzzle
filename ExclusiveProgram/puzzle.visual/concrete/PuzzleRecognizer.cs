@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 /*
@@ -30,9 +31,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private readonly PuzzleRecognizerImpl impl;
         private readonly double uniquenessThreshold;
 
-        public PuzzleRecognizer()
-        {
-        }
 
         public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl)
         {
@@ -243,28 +241,32 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                       new PointF(rect.Right, rect.Top),
                       new PointF(rect.Left, rect.Top)
                 };
-                pts = CvInvoke.PerspectiveTransform(pts, homography);
+                var prespective_pts = CvInvoke.PerspectiveTransform(pts, homography);
                 if (listener != null)
-                    listener.OnPerspective(observedImage,modelImage,homography);
+                    listener.OnPerspective(observedImage,modelImage,homography,prespective_pts);
 
-                result_.pts = pts;
+                result_.pts = prespective_pts;
 #if NETFX_CORE
            Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
 #else
-                Point[] points = Array.ConvertAll<PointF, Point>(pts, Point.Round);
+                Point[] points = Array.ConvertAll<PointF, Point>(result_.pts, Point.Round);
+                
 #endif
                 using (VectorOfPoint vp = new VectorOfPoint(points))
                 {
                     double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
-                    double Angel = Round((int)Slope, 1);
-
-                    if (Math.Abs(Angel) > 75 && Math.Abs(Angel) < 115)
+                    var a = GetDoubleValue(homography, 0, 1);
+                    var b = GetDoubleValue(homography, 0, 0);
+                    double Angle = - Math.Atan2(a,b) * 180 / Math.PI;
+                    /*double Angle = Round((int)Slope, 1);
+                    if (Math.Abs(Angle) > 75 && Math.Abs(Angle) < 115)
                     {
-                        if (Angel > 0)
-                        { Angel = 90; }
+                        if (Angle > 0)
+                        { Angle = 90; }
                         else
-                        { Angel = -90; }
+                        { Angle = -90; }
                     }
+                    */
 
                     int w = Math.Abs(points[2].X - points[3].X);
                     int h = Math.Abs(points[0].Y - points[3].Y);
@@ -280,12 +282,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
                     { Check_Image_Bool = true; }
 
-                    result_.Angle = Angel;
+                    result_.Angle = Angle;
 
                     #region draw the projected region on the image
                     //Draw the matched keypoints
                     if (listener != null)
-                        listener.OnMatched(modelImage.ToImage<Bgr,byte>(), modelKeyPoints, observedImage.ToImage<Bgr,byte>(),vp,observedKeyPoints,matches, mask,matchTime,Angel);
+                        listener.OnMatched(modelImage.ToImage<Bgr,byte>(), modelKeyPoints, observedImage.ToImage<Bgr,byte>(),vp,observedKeyPoints,matches, mask,matchTime,Slope,Angle);
                     #endregion draw the projected region on the image
 
                 }
@@ -337,6 +339,19 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             mask.SetTo(new MCvScalar(255));
             Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
             return mask;
+        }
+
+        private double GetDoubleValue(Mat mat, int row, int col)
+        {
+            var value = new double[1];
+            Marshal.Copy(mat.DataPointer + (row * mat.Cols + col) * mat.ElementSize, value, 0, 1);
+            return value[0];
+        }
+
+        private void SetDoubleValue(Mat mat, int row, int col, double value)
+        {
+            var target = new[] { value };
+            Marshal.Copy(target, 0, mat.DataPointer + (row * mat.Cols + col) * mat.ElementSize, 1);
         }
 
         public void setListener(PuzzleRecognizerListener listener)

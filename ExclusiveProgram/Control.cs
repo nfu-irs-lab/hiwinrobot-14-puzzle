@@ -40,10 +40,11 @@ namespace ExclusiveProgram
 
             var corrector_threshold = (int)corrector_threshold_numric.Value;
             Color backgroundColor = getColorFromTextBox();
-            var corrector = new PuzzleCorrector(corrector_threshold,backgroundColor);
+            //var corrector = new PuzzleCorrector(corrector_threshold,backgroundColor);
+            var corrector = new ROIPuzzleCorrector();
             corrector.setListener(new MyPuzzleCorrectorListener(this));
 
-            var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage.jpg");
+            var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage2.jpg");
             var recognizer = new PuzzleRecognizer(modelImage,uniquenessThreshold,new SiftFlannPuzzleRecognizerImpl());
             recognizer.setListener(new MyRecognizeListener(this));
 
@@ -59,10 +60,10 @@ namespace ExclusiveProgram
 
                 foreach (Puzzle_sturct result in results)
                 {
-                    //Point StartPoint = new Point((int)(location.Coordinate.X - (location.Size.Width / 2.0f)), (int)(location.Coordinate.Y - (location.Size.Height / 2.0f)));
-                    //CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, location.Size.Width, location.Size.Height), new MCvScalar(0, 0, 255), 3);
-                    //CvInvoke.PutText(showImage, "Angle:" + location.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
-                    Console.WriteLine("" + result.position);
+                    var control = new UserControl1();
+                    control.setImage(result.image.ToBitmap());
+                    control.setLabel("Angle:"+Math.Round(result.Angel,2),result.position);
+                    recognize_match_puzzleView.Controls.Add(control);
                 }
             }catch (Exception ex)
             {
@@ -186,20 +187,19 @@ namespace ExclusiveProgram
 
             private readonly Control ui;
 
-            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfPoint vp, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double angle)
+            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfPoint vp, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double Slope,double Angle)
             {
                 Mat resultImage = new Mat();
                 Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
                    matches, resultImage, new MCvScalar(0, 0, 255), new MCvScalar(255, 255, 255), mask);
 
-                CvInvoke.Polylines(resultImage, vp, true, new MCvScalar(255, 0, 0, 255), 5);
-                CvInvoke.PutText(resultImage, string.Format("{0}ms , {1:0.00}", matchTime, angle), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
+                CvInvoke.PutText(resultImage, string.Format("{0}ms , Slop:{1:0.00} , Angle:{2:0.00}", matchTime, Slope,Angle), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
 
                 resultImage.Save("matching_results\\"+index+++".jpg");
                 resultImage.Dispose();
             }
 
-            public void OnPerspective(Mat observedImage,Mat modelImage,Mat homography)
+            public void OnPerspective(Mat observedImage,Mat modelImage,Mat homography,PointF[] pts)
             {
                 var perspective_image = new Mat(observedImage.Size,modelImage.Depth,3);
                 CvInvoke.WarpPerspective(modelImage, perspective_image, homography, observedImage.Size);
