@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
@@ -16,24 +17,54 @@ namespace ExclusiveProgram
 {
     public partial class Control : MainForm.ExclusiveControl
     {
+        //private VideoCapture capture;
+        private delegate void DelDoPuzzleVisual();
 
         public Control()
         {
             InitializeComponent();
             Config = new Config();
+            //capture=new VideoCapture(0);
+            //capture.Set(CapProp.Brightness, 120);
+            //capture.Set(CapProp.Exposure, 5);
+            Thread thread = new Thread(monitor);
+            thread.Start();
+        }
+
+        private void monitor()
+        {
+            /*
+              Mat mat=null;
+            while (true)
+            {
+                if(mat!=null)
+                    mat.Dispose();
+                var new_mat= capture.QueryFrame();
+                var image = new_mat.ToImage<Bgr,byte>().ToBitmap();
+                capture_image.Image = image;
+                mat = new_mat;
+                CvInvoke.WaitKey(100);
+            }
+            */
         }
 
         private void button1_Click(object sender, EventArgs e)
+        {
+            Thread thread = new Thread(DoPuzzleVisual);
+            thread.Start();
+        }
+
+        private void DoPuzzleVisual()
         {
             corrector_binarization_puzzleView.Controls.Clear();
             corrector_result_puzzleView.Controls.Clear();
             corrector_ROI_puzzleView.Controls.Clear();
 
-            var minSize = new Size((int)min_width_numeric.Value,(int)min_height_numeric.Value);
-            var maxSize = new Size((int)max_width_numeric.Value,(int)max_height_numeric.Value);
+            var minSize = new Size((int)min_width_numeric.Value, (int)min_height_numeric.Value);
+            var maxSize = new Size((int)max_width_numeric.Value, (int)max_height_numeric.Value);
             var threshold = (int)numericUpDown_threshold.Value;
-            var locator = new PuzzleLocator(threshold,minSize,maxSize);
-            var uniquenessThreshold=((double)numericUpDown_uniqueness_threshold.Value)*0.01f;
+            var locator = new PuzzleLocator(threshold, minSize, maxSize);
+            var uniquenessThreshold = ((double)numericUpDown_uniqueness_threshold.Value) * 0.01f;
 
             locator.setListener(new MyPuzzleLocatorListener(this));
 
@@ -45,10 +76,10 @@ namespace ExclusiveProgram
             corrector.setListener(new MyPuzzleCorrectorListener(this));
 
             var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage2.jpg");
-            var recognizer = new PuzzleRecognizer(modelImage,uniquenessThreshold,new SiftFlannPuzzleRecognizerImpl());
+            var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl());
             recognizer.setListener(new MyRecognizeListener(this));
 
-            var factory = new DefaultPuzzleFactory(locator,recognizer,corrector,new PuzzleResultMerger());
+            var factory = new DefaultPuzzleFactory(locator, recognizer, corrector, new PuzzleResultMerger());
             factory.setListener(new MyFactoryListener(this));
 
             var image = VisualSystem.LoadImageFromFile(file_path.Text);
@@ -62,13 +93,14 @@ namespace ExclusiveProgram
                 {
                     var control = new UserControl1();
                     control.setImage(result.image.ToBitmap());
-                    control.setLabel("Angle:"+Math.Round(result.Angel,2),result.position);
+                    control.setLabel("Angle:" + Math.Round(result.Angel, 2), result.position);
                     recognize_match_puzzleView.Controls.Add(control);
                 }
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
-                Console.WriteLine("Error:"+ex.Message);
-                MessageBox.Show(ex.Message,"辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.WriteLine("Error:" + ex.Message);
+                MessageBox.Show(ex.Message, "辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -92,6 +124,7 @@ namespace ExclusiveProgram
         private void button3_Click(object sender, EventArgs e)
         {
 
+            capture.Set(CapProp.Exposure, -4);
         }
 
         private void backgroundColor_textbox_TextChanged(object sender, EventArgs e)
@@ -123,6 +156,8 @@ namespace ExclusiveProgram
 
         private class MyPuzzleCorrectorListener : PuzzleCorrectorListener
         {
+
+            private delegate void DelonROIDetected(Image<Bgr, byte> result, LocationResult locationResult);
             public MyPuzzleCorrectorListener(Control ui)
             {
                 this.ui = ui;
@@ -137,23 +172,29 @@ namespace ExclusiveProgram
             }
             public void onPreprocessDone(Image<Gray, byte> result)
             {
-                var control = new UserControl1();
-                control.setImage(result.ToBitmap());
-                control.setLabel("", "");
-                this.ui.corrector_binarization_puzzleView.Controls.Add(control);
+
             }
 
             public void onROIDetected(Image<Bgr, byte> result, LocationResult locationResult)
             {
-                var control = new UserControl1();
-                control.setImage(result.ToBitmap());
-                control.setLabel(locationResult.Size.ToString(),""+locationResult.Angle);
-                this.ui.corrector_ROI_puzzleView.Controls.Add(control);
+                if (ui.InvokeRequired)
+                {
+                    DelonROIDetected del = new DelonROIDetected(onROIDetected);
+                    ui.Invoke(del,result,locationResult);
+                }
+                else
+                {
+                    var control = new UserControl1();
+                    control.setImage(result.ToBitmap());
+                    control.setLabel(locationResult.Size.ToString(), "" + locationResult.Angle);
+                    ui.corrector_ROI_puzzleView.Controls.Add(control);
+                }
             }
         }
 
         private class MyPuzzleLocatorListener : PuzzleLocatorListener
         {
+            private delegate void DelonPreprocessDone(Image<Gray, byte> result);
 
             public MyPuzzleLocatorListener(Control ui)
             {
@@ -173,7 +214,15 @@ namespace ExclusiveProgram
 
             public void onPreprocessDone(Image<Gray, byte> result)
             {
-                ui.capture_binarization_preview.Image=result.ToBitmap();
+                if (this.ui.InvokeRequired)
+                {
+                    DelonPreprocessDone del = new DelonPreprocessDone(onPreprocessDone);
+                    this.ui.Invoke(del,result);
+                }
+                else
+                {
+                    ui.capture_binarization_preview.Image=result.ToBitmap();
+                }
             }
         }
 
@@ -235,6 +284,8 @@ namespace ExclusiveProgram
             {
             }
         }
+    
+
 
     }
 
