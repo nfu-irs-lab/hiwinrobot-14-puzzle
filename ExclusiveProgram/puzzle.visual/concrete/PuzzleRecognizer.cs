@@ -25,16 +25,18 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
         private Image<Bgr,byte> preprocessModelImage=null;
         private readonly PuzzleRecognizerImpl impl;
+        private readonly IPuzzleCorrector corrector;
         private readonly Image<Bgr, byte> modelImage;
         private readonly double uniquenessThreshold;
         private PuzzleRecognizerListener listener;
 
 
-        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl)
+        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl,IPuzzleCorrector corrector)
         {
             this.modelImage = modelImage;
             this.uniquenessThreshold = uniquenessThreshold;
             this.impl = impl;
+            this.corrector = corrector;
         }
 
         public void PreprocessModelImage()
@@ -65,9 +67,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             Mat mask;
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
             {
-                MatchFeaturePoints(observedImage.Mat,preprocessModelImage.Mat,out modelKeyPoints,out observedKeyPoints,matches, out mask, out matchTime);
+                MatchFeaturePointsAndFindMask(observedImage.Mat,preprocessModelImage.Mat,out modelKeyPoints,out observedKeyPoints,matches, out mask, out matchTime);
                 Mat homography = FindHomography(modelKeyPoints, observedKeyPoints, matches, mask);
 
+                var a = GetDoubleValue(homography, 0, 1);
+                var b = GetDoubleValue(homography, 0, 0);
+                result.Angle = - Math.Atan2(a,b) * 180 / Math.PI;
                 //draw a rectangle along the projected model
                 Rectangle rect = new Rectangle(Point.Empty, preprocessModelImage.Size);
 
@@ -82,19 +87,15 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 if (listener != null)
                     listener.OnPerspective(observedImage.Mat, preprocessModelImage.Mat, homography, prespective_pts);
 
-                result.pts = prespective_pts;
     #if NETFX_CORE
            Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
     #else
-                Point[] points = Array.ConvertAll<PointF, Point>(result.pts, Point.Round);
+                Point[] points = Array.ConvertAll<PointF, Point>(prespective_pts, Point.Round);
                 
     #endif
                 using (VectorOfPoint vp = new VectorOfPoint(points))
                 {
                     double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
-                    var a = GetDoubleValue(homography, 0, 1);
-                    var b = GetDoubleValue(homography, 0, 0);
-                    double Angle = - Math.Atan2(a,b) * 180 / Math.PI;
 
                     int w = Math.Abs(points[2].X - points[3].X);
                     int h = Math.Abs(points[0].Y - points[3].Y);
@@ -110,33 +111,42 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     //if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
                     //{ Check_Image_Bool = true; }
 
-                    result.Angle = Angle;
-
-                    #region draw the projected region on the image
-                    //Draw the matched keypoints
                     if (listener != null)
-                        listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, vp, observedKeyPoints, matches, mask, matchTime, Slope, Angle);
-                    #endregion draw the projected region on the image
+                        listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, vp, observedKeyPoints, matches, mask, matchTime, Slope, result.Angle);
 
                 }
+
+                /*
+                 0     左下
+                 1     右下
+                 2     右上
+                 3     左上
+                */
+
+                int puzzle_central_point_x = (int)Math.Abs(prespective_pts[2].X + prespective_pts[3].X) / 2;
+                int puzzle_central_point_y = (int)Math.Abs(prespective_pts[0].Y + prespective_pts[3].Y) / 2;
+
+                if (Math.Abs(result.Angle) == 90)
+                {
+                    puzzle_central_point_x = (int)Math.Abs(prespective_pts[3].X + prespective_pts[0].X) / 2;
+                    puzzle_central_point_y = (int)Math.Abs(prespective_pts[1].Y + prespective_pts[0].Y) / 2;
+                }
+
+                //分成7等分
+                var width_per_puzzle=(preprocessModelImage.Width / 7);
+                //分成5等分
+                var height_per_puzzle=(preprocessModelImage.Height / 5);
+
+                int x = (int)puzzle_central_point_x / width_per_puzzle;
+                int y = (int)puzzle_central_point_y / height_per_puzzle;
+
+                if (x >= 7)
+                { x = 6; }
+                if (y >= 5)
+                { y = 4; }
+
+                result.position=y.ToString() + x.ToString();
             }
-            int x_P = (int)Math.Abs(result.pts[2].X + result.pts[3].X) / 2;
-            int y_P = (int)Math.Abs(result.pts[0].Y + result.pts[3].Y) / 2;
-
-            if (Math.Abs(result.Angle) == 90)
-            {
-                x_P = (int)Math.Abs(result.pts[3].X + result.pts[0].X) / 2;
-                y_P = (int)Math.Abs(result.pts[1].Y + result.pts[0].Y) / 2;
-            }
-
-            int x = (int)x_P / (preprocessModelImage.Width / 7);
-            int y = (int)y_P / (preprocessModelImage.Height / 5);
-
-            if (x >= 7)
-            { x = 6; }
-            if (y >= 5)
-            { y = 4; }
-            result.position=y.ToString() + x.ToString();
 
             return result; 
         }
@@ -155,7 +165,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         /// <param name="observedImage">The observed image</param>
         /// <param name="matchTime">The output total time for computing the homography matrix.</param>
         /// <returns>The model image and observed image, the matched features and homography projection.</returns>
-        private void MatchFeaturePoints(Mat observedImage,Mat modelImage,out VectorOfKeyPoint modelKeyPoints,out VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches,out Mat mask, out long matchTime)
+        private void MatchFeaturePointsAndFindMask(Mat observedImage,Mat modelImage,out VectorOfKeyPoint modelKeyPoints,out VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches,out Mat mask, out long matchTime)
         {
             modelKeyPoints = new VectorOfKeyPoint();
             observedKeyPoints = new VectorOfKeyPoint();

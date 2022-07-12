@@ -17,7 +17,6 @@ namespace ExclusiveProgram.puzzle.visual.framework
     public struct RecognizeResult
     {
         public double Angle;
-        public PointF[] pts;
         public string position;
     };
 
