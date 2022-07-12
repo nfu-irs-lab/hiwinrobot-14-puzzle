@@ -74,15 +74,14 @@ namespace ExclusiveProgram
             var corrector = new ROIPuzzleCorrector();
             corrector.setListener(new MyPuzzleCorrectorListener(this));
 
-            var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage2.jpg");
+            var modelImage = CvInvoke.Imread("samples\\modelImage2.jpg").ToImage<Bgr,byte>();
             var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl());
             recognizer.setListener(new MyRecognizeListener(this));
 
             var factory = new DefaultPuzzleFactory(locator, recognizer, corrector, new PuzzleResultMerger());
             factory.setListener(new MyFactoryListener(this));
 
-            var image = VisualSystem.LoadImageFromFile(file_path.Text);
-
+            var image  = CvInvoke.Imread(file_path.Text).ToImage<Bgr,byte>();
             capture_preview.Image = image.ToBitmap();
             try
             {

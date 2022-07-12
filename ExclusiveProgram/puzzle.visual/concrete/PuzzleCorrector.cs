@@ -24,7 +24,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         {
             Rectangle rect = new Rectangle((int)(raw.Coordinate.X - raw.Size.Width / 2.0f), (int)(raw.Coordinate.Y - raw.Size.Height / 2.0f), raw.Size.Width, raw.Size.Height);
 
-            Mat Ori_img = VisualSystem.Image2Mat<Bgr>(input);
+            Mat Ori_img = input.Mat;
 
             //將ROI選取區域使用Mat型式讀取
             Image<Bgr, byte> Copy_ = new Mat(Ori_img, rect).ToImage<Bgr, byte>();
@@ -124,7 +124,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             //儲存圖片
             //new_img_Save.Save(@"C:\Users\HIWIN\Desktop\第十三屆上銀程式\ming\顏色辨別(HSV)\test" + num.ToString() + ".jpg");
-            return VisualSystem.Mat2Image<Bgr>(new_img_Save);
+            return new_img_Save.ToImage<Bgr,byte>();
         }
 
         public void setListener(PuzzleCorrectorListener listener)

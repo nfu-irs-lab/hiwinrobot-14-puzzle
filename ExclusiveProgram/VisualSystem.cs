@@ -1,5 +1,4 @@
 ﻿using Emgu.CV;
-using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 namespace ExclusiveProgram
 {
@@ -8,41 +7,6 @@ namespace ExclusiveProgram
         private VisualSystem()
         {
 
-        }
-
-        private static VideoCapture camera=new VideoCapture();
-
-        public static void setCameraResolution(int resolution_width,int resolution_height)
-        {
-            camera.Set(CapProp.FrameWidth,resolution_width);
-            camera.Set(CapProp.FrameHeight,resolution_height);
-        }
-
-        public static Image<Bgr,byte> CaptureImage()
-        {
-            return Mat2Image<Bgr>(CaptureMat());
-        }
-
-        public static Mat CaptureMat()
-        {
-            return camera.QueryFrame();
-        }
-
-
-        public static Image<Bgr,byte> LoadImageFromFile(string filename)
-        {
-            return Mat2Image<Bgr>(CvInvoke.Imread(filename));
-        }
-
-        public static Image<T, byte> Mat2Image<T>(Mat mat) where T : struct, IColor
-        {
-            return mat.Clone().ToImage<T, byte>();
-        }
-
-
-        public static Mat Image2Mat<T>(Image<T,byte> image) where T : struct, IColor
-        {
-            return image.Mat;
         }
 
         #region 圖片預處理

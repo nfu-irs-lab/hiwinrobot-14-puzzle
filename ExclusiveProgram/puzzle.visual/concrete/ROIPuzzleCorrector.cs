@@ -16,7 +16,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         {
             Rectangle rect = new Rectangle((int)(raw.Coordinate.X - raw.Size.Width / 2.0f), (int)(raw.Coordinate.Y - raw.Size.Height / 2.0f), raw.Size.Width, raw.Size.Height);
 
-            Mat Ori_img = VisualSystem.Image2Mat<Bgr>(input);
+            Mat Ori_img = input.Mat;
 
             //將ROI選取區域使用Mat型式讀取
             Image<Bgr, byte> Copy_ = new Mat(Ori_img, rect).ToImage<Bgr, byte>();

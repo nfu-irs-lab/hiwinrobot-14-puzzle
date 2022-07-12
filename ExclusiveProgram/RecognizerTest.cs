@@ -18,12 +18,12 @@ namespace ExclusiveProgram
     {
         private static int index = 0;
         public static void main(string[] args){
-            var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage2.jpg");
+            var modelImage   = CvInvoke.Imread("samples\\modelImage2.jpg").ToImage<Bgr,byte>();
             var recognizer = new PuzzleRecognizer(modelImage,0.8,new SiftFlannPuzzleRecognizerImpl());
             recognizer.setListener(new MyTestListener());
             for (int i = 1; i <= 4; i++)
             {
-                var results = recognizer.Recognize(VisualSystem.LoadImageFromFile("samples\\Test"+i+".jpg"));
+                var results = recognizer.Recognize(CvInvoke.Imread("samples\\Test"+i+".jpg").ToImage<Bgr,byte>());
                 index = i;
             }
 
