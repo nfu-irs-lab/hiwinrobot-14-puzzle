@@ -27,6 +27,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         }
         public List<Puzzle_sturct> Execute(Image<Bgr, byte> input)
         {
+            if (!recognizer.ModelImagePreprocessIsDone())
+                recognizer.PreprocessModelImage();
+
             var image = input.Clone();
             List<LocationResult> dataList = locator.Locate(image);
             if(listener != null)

@@ -43,6 +43,8 @@ namespace ExclusiveProgram.puzzle.visual.framework
 
     public interface IPuzzleRecognizer
     {
+        bool ModelImagePreprocessIsDone();
+        void PreprocessModelImage();
         RecognizeResult Recognize(Image<Bgr,byte> image);
         void setListener(PuzzleRecognizerListener listener);
     }
