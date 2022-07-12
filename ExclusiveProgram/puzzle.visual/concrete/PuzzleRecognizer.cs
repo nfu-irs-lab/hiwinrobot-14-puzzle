@@ -31,12 +31,11 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private PuzzleRecognizerListener listener;
 
 
-        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl,IPuzzleCorrector corrector)
+        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl)
         {
             this.modelImage = modelImage;
             this.uniquenessThreshold = uniquenessThreshold;
             this.impl = impl;
-            this.corrector = corrector;
         }
 
         public void PreprocessModelImage()

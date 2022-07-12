@@ -43,15 +43,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             foreach (LocationResult location in dataList)
             {
                 Task task=Task.Factory.StartNew(() => { 
-                    var correctedImage = corrector.Correct(image, location);
-                    if (listener != null)
-                        listener.onCorrected(correctedImage);
 
-                    var recognized_result=recognizer.Recognize(correctedImage);
+                    var recognized_result=recognizer.Recognize(location.ROI);
                     if (listener != null)
                         listener.onRecognized(recognized_result);
 
-                    results.Add(merger.merge(location,correctedImage,recognized_result));
+                    results.Add(merger.merge(location,location.ROI,recognized_result));
                     image.Dispose();
                 });
                 tasks.Add(task);

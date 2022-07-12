@@ -84,6 +84,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     puzzleData.Angle = getAngle(BoundingBox, BoundingBox_, rect);
                     puzzleData.Coordinate = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);
+                    puzzleData.ROI = getROI(puzzleData.Coordinate,puzzleData.Size,input);
                     puzzleDataList.Add(puzzleData);
                     if (listener != null)
                         listener.onLocated(puzzleData);
@@ -94,6 +95,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             return puzzleDataList;
         }
 
+        private Image<Bgr,byte> getROI(Point Coordinate,Size Size,Image<Bgr,byte> input)
+        {
+            Rectangle rect = new Rectangle((int)(Coordinate.X - Size.Width / 2.0f), (int)(Coordinate.Y - Size.Height / 2.0f), Size.Width, Size.Height);
+
+            //將ROI選取區域使用Mat型式讀取
+            return new Mat(input.Mat, rect).ToImage<Bgr, byte>();
+        }
         private bool CheckSize(Rectangle rect, Point Position)
         {
             if (rect.Size.Width < minSize.Width || rect.Size.Height < minSize.Height)

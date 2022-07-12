@@ -22,6 +22,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public Point Coordinate;
         public double Angle;
         public Size Size;
+        public Image<Bgr,byte> ROI;
     }
 
     public interface IPuzzleLocator

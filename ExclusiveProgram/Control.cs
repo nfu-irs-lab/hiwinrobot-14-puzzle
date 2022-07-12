@@ -72,7 +72,6 @@ namespace ExclusiveProgram
             Color backgroundColor = getColorFromTextBox();
             //var corrector = new PuzzleCorrector(corrector_threshold,backgroundColor);
             var corrector = new ROIPuzzleCorrector();
-            corrector.setListener(new MyPuzzleCorrectorListener(this));
 
             var modelImage = CvInvoke.Imread("samples\\modelImage2.jpg").ToImage<Bgr,byte>();
             var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl());
@@ -164,43 +163,6 @@ namespace ExclusiveProgram
 
         }
 
-        private class MyPuzzleCorrectorListener : PuzzleCorrectorListener
-        {
-
-            private delegate void DelonROIDetected(Image<Bgr, byte> result, LocationResult locationResult);
-            public MyPuzzleCorrectorListener(Control ui)
-            {
-                this.ui = ui;
-            }
-
-            private readonly Control ui;
-
-
-            public void onBinarizationDone(Image<Gray, byte> result)
-            {
-
-            }
-            public void onPreprocessDone(Image<Gray, byte> result)
-            {
-
-            }
-
-            public void onROIDetected(Image<Bgr, byte> result, LocationResult locationResult)
-            {
-                if (ui.InvokeRequired)
-                {
-                    DelonROIDetected del = new DelonROIDetected(onROIDetected);
-                    ui.Invoke(del,result,locationResult);
-                }
-                else
-                {
-                    var control = new UserControl1();
-                    control.setImage(result.ToBitmap());
-                    control.setLabel(locationResult.Size.ToString(), "" + locationResult.Angle);
-                    ui.corrector_ROI_puzzleView.Controls.Add(control);
-                }
-            }
-        }
 
         private class MyPuzzleLocatorListener : PuzzleLocatorListener
         {
@@ -269,6 +231,7 @@ namespace ExclusiveProgram
 
         private class MyFactoryListener : PuzzleFactoryListener
         {
+            private delegate void DelonLocated(List<LocationResult> results);
             private delegate void DelOnCorrected(Image<Bgr, byte> result);
             public MyFactoryListener(Control ui)
             {
@@ -279,6 +242,21 @@ namespace ExclusiveProgram
 
             public void onLocated(List<LocationResult> results)
             {
+                if (ui.InvokeRequired)
+                {
+                    DelonLocated del = new DelonLocated(onLocated);
+                    ui.Invoke(del,results);
+                }
+                else
+                {
+                    foreach(var result in results)
+                    {
+                        var control = new UserControl1();
+                        control.setImage(result.ROI.ToBitmap());
+                        control.setLabel(result.Size.ToString(),result.Coordinate.ToString());
+                        ui.corrector_ROI_puzzleView.Controls.Add(control);
+                    }
+                }
             }
 
 
