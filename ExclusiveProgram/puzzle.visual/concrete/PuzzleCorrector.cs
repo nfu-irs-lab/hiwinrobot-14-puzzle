@@ -19,23 +19,11 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             thereshold = Thereshold;
             this.backgroundColor = new Bgr(backgroundColor);
         }
-        int id;
-        public Image<Bgr, byte> Correct(Image<Bgr, byte> input, LocationResult raw)
+        public Image<Bgr, byte> Correct(Image<Bgr, byte> ROI, double Angle)
         {
-            Rectangle rect = new Rectangle((int)(raw.Coordinate.X - raw.Size.Width / 2.0f), (int)(raw.Coordinate.Y - raw.Size.Height / 2.0f), raw.Size.Width, raw.Size.Height);
-
-            Mat Ori_img = input.Mat;
-
-            //將ROI選取區域使用Mat型式讀取
-            Image<Bgr, byte> Copy_ = new Mat(Ori_img, rect).ToImage<Bgr, byte>();
-            if (listener != null)
-            {
-                listener.onROIDetected(Copy_,raw);
-            }
-
             //獲得矩形長寬
-            int Rotate_newImg_x = rect.Width,
-                Rotate_newImg_y = rect.Height;
+            int Rotate_newImg_x = ROI.Width,
+                Rotate_newImg_y = ROI.Height;
 
             //計算對角線，為了旋轉時圖片不轉出邊界
             double Lenght = Math.Sqrt((Rotate_newImg_x * Rotate_newImg_x) + (Rotate_newImg_y * Rotate_newImg_y));
@@ -48,13 +36,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
 
             //將圖片複製到圖片中央
-            Copy_.CopyTo(new_img);
+            ROI.CopyTo(new_img);
 
             //取消ROI設定
             new_img.ROI = Rectangle.Empty;
 
             //將圖片旋轉(矯正[rectify]用)，旋轉出邊界顏色使用ROI_HSV值轉RGB(後續處理方便)
-            new_img = new_img.Rotate(raw.Angle, backgroundColor);
+            new_img = new_img.Rotate(Angle, backgroundColor);
 
             //new_ing._EqualizeHist();
             //進一步縮小圖片

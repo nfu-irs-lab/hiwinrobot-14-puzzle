@@ -19,7 +19,7 @@ namespace ExclusiveProgram
         private static int index = 0;
         public static void main(string[] args){
             var modelImage   = CvInvoke.Imread("samples\\modelImage2.jpg").ToImage<Bgr,byte>();
-            var recognizer = new PuzzleRecognizer(modelImage,0.8,new SiftFlannPuzzleRecognizerImpl());
+            var recognizer = new PuzzleRecognizer(modelImage,0.8,new SiftFlannPuzzleRecognizerImpl(),null);
             recognizer.setListener(new MyTestListener());
             for (int i = 1; i <= 4; i++)
             {
@@ -31,6 +31,11 @@ namespace ExclusiveProgram
 
         private class MyTestListener : PuzzleRecognizerListener
         {
+            public void OnCorrected(Image<Bgr, byte> image)
+            {
+                throw new NotImplementedException();
+            }
+
             public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfPoint vp, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double Slope, double Angle)
             {
                 Mat resultImage = new Mat();

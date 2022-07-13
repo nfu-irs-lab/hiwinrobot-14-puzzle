@@ -129,7 +129,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="puzzle.visual\concrete\DefaultPuzzleFactory.cs" />
-    <Compile Include="puzzle.visual\concrete\ROIPuzzleCorrector.cs" />
     <Compile Include="puzzle.visual\concrete\SiftFlannPuzzleRecognizerImpl.cs" />
     <Compile Include="puzzle.visual\concrete\SiftBfmPuzzleRecognizerImpl.cs" />
     <Compile Include="puzzle.visual\concrete\PuzzleCorrector.cs" />

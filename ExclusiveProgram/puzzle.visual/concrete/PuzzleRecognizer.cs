@@ -31,11 +31,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private PuzzleRecognizerListener listener;
 
 
-        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl)
+        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl,IPuzzleCorrector corrector)
         {
             this.modelImage = modelImage;
             this.uniquenessThreshold = uniquenessThreshold;
             this.impl = impl;
+            this.corrector = corrector;
         }
 
         public void PreprocessModelImage()
@@ -114,6 +115,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                         listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, vp, observedKeyPoints, matches, mask, matchTime, Slope, result.Angle);
 
                 }
+                var corrected = corrector.Correct(image, -result.Angle);
+                if(listener!=null)
+                    listener.OnCorrected(corrected);
 
                 /*
                  0     左下
@@ -122,22 +126,16 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                  3     左上
                 */
 
-                int puzzle_central_point_x = (int)Math.Abs(prespective_pts[2].X + prespective_pts[3].X) / 2;
-                int puzzle_central_point_y = (int)Math.Abs(prespective_pts[0].Y + prespective_pts[3].Y) / 2;
+                Point puzzle_central_point = new Point(corrected.Size.Width / 2, corrected.Size.Height / 2);
 
-                if (Math.Abs(result.Angle) == 90)
-                {
-                    puzzle_central_point_x = (int)Math.Abs(prespective_pts[3].X + prespective_pts[0].X) / 2;
-                    puzzle_central_point_y = (int)Math.Abs(prespective_pts[1].Y + prespective_pts[0].Y) / 2;
-                }
 
                 //分成7等分
-                var width_per_puzzle=(preprocessModelImage.Width / 7);
+                double width_per_puzzle=(preprocessModelImage.Width / 7.0f);
                 //分成5等分
-                var height_per_puzzle=(preprocessModelImage.Height / 5);
+                double height_per_puzzle=(preprocessModelImage.Height / 5.0f);
 
-                int x = (int)puzzle_central_point_x / width_per_puzzle;
-                int y = (int)puzzle_central_point_y / height_per_puzzle;
+                int x = (int)(puzzle_central_point.X / width_per_puzzle);
+                int y = (int)(puzzle_central_point.Y / height_per_puzzle);
 
                 if (x >= 7)
                 { x = 6; }

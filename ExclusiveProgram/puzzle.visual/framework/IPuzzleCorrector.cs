@@ -12,14 +12,13 @@ namespace ExclusiveProgram.puzzle.visual.framework
     public interface PuzzleCorrectorListener
     {
 
-        void onROIDetected(Image<Bgr, byte> result,LocationResult locationResult);
         void onPreprocessDone(Image<Gray, byte> result);
         
     }
 
     public interface IPuzzleCorrector
     {
-        Image<Bgr,byte> Correct(Image<Bgr, byte> input,LocationResult raw);
+        Image<Bgr,byte> Correct(Image<Bgr, byte> input,double Angle);
         void setListener(PuzzleCorrectorListener listener);
     }
 }

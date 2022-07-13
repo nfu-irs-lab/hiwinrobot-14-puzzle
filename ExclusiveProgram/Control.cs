@@ -52,6 +52,7 @@ namespace ExclusiveProgram
             corrector_binarization_puzzleView.Controls.Clear();
             corrector_result_puzzleView.Controls.Clear();
             corrector_ROI_puzzleView.Controls.Clear();
+            recognize_match_puzzleView.Controls.Clear();
             Thread thread = new Thread(DoPuzzleVisual);
             thread.Start();
         }
@@ -70,11 +71,10 @@ namespace ExclusiveProgram
 
             var corrector_threshold = (int)corrector_threshold_numric.Value;
             Color backgroundColor = getColorFromTextBox();
-            //var corrector = new PuzzleCorrector(corrector_threshold,backgroundColor);
-            var corrector = new ROIPuzzleCorrector();
+            var corrector = new PuzzleCorrector(corrector_threshold,backgroundColor);
 
             var modelImage = CvInvoke.Imread("samples\\modelImage2.jpg").ToImage<Bgr,byte>();
-            var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl());
+            var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),corrector);
             recognizer.setListener(new MyRecognizeListener(this));
 
             var factory = new DefaultPuzzleFactory(locator, recognizer, corrector, new PuzzleResultMerger());
@@ -226,6 +226,11 @@ namespace ExclusiveProgram
                 CvInvoke.WarpPerspective(modelImage, perspective_image, homography, observedImage.Size);
                 observedImage.Save("perspective_results\\R"+index+".jpg");
                 perspective_image.Save("perspective_results\\P"+index+".jpg");
+            }
+
+            public void OnCorrected(Image<Bgr, byte> image)
+            {
+                image.Save("perspective_results\\C"+index+".jpg");
             }
         }
 
