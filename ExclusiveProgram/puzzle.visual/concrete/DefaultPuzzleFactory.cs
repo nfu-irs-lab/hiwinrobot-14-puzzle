@@ -1,11 +1,9 @@
 ﻿using Emgu.CV;
-using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using ExclusiveProgram.puzzle.visual.framework;
-using System;
+using ExclusiveProgram.threading;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ExclusiveProgram.puzzle.visual.concrete
@@ -14,16 +12,23 @@ namespace ExclusiveProgram.puzzle.visual.concrete
     {
         private IPuzzleRecognizer recognizer;
         private IPuzzleLocator locator;
-        private IPuzzleCorrector corrector;
         private readonly IPuzzleResultMerger merger;
         private PuzzleFactoryListener listener;
+        private readonly TaskFactory factory;
+        private readonly CancellationTokenSource cts;
 
-        public DefaultPuzzleFactory(IPuzzleLocator locator,IPuzzleRecognizer recognizer, IPuzzleCorrector corrector,IPuzzleResultMerger merger)
+        public DefaultPuzzleFactory(IPuzzleLocator locator, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,int threadCount)
         {
             this.recognizer = recognizer;
             this.locator = locator;
-            this.corrector = corrector;
             this.merger = merger;
+
+            // Create a scheduler that uses two threads.
+            LimitedConcurrencyLevelTaskScheduler lcts = new LimitedConcurrencyLevelTaskScheduler(threadCount);
+
+            // Create a TaskFactory and pass it our custom scheduler.
+            factory = new TaskFactory(lcts);
+            cts = new CancellationTokenSource();
         }
         public List<Puzzle_sturct> Execute(Image<Bgr, byte> input)
         {
@@ -32,44 +37,30 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             var image = input.Clone();
             List<LocationResult> dataList = locator.Locate(image);
-            if(listener != null)
+            if (listener != null)
                 listener.onLocated(dataList);
 
 
             List<Puzzle_sturct> results = new List<Puzzle_sturct>();
 
-            List<Task> tasks = new List<Task>();
 
+            List<Task> tasks = new List<Task>();
             foreach (LocationResult location in dataList)
             {
-                Task task=Task.Factory.StartNew(() => { 
-
-                    var recognized_result=recognizer.Recognize(location.ROI);
+                Task task = factory.StartNew(() =>
+                {
+                    var recognized_result = recognizer.Recognize(location.ROI);
                     if (listener != null)
                         listener.onRecognized(recognized_result);
 
-                    results.Add(merger.merge(location,location.ROI,recognized_result));
+                    results.Add(merger.merge(location, location.ROI, recognized_result));
                     image.Dispose();
-                });
+                },cts.Token);
                 tasks.Add(task);
             }
-            int completed_task_count= 0;
-            int monitor= 0;
-            bool[] record=new bool[tasks.Count];
-            while (completed_task_count<tasks.Count)
-            {
-                if (tasks[monitor].IsCompleted && record[monitor] == false)
-                {
-                    completed_task_count++;
-                    record[monitor]=true;
-                }
-                if (monitor + 1 == tasks.Count)
-                    monitor = 0;
-                else
-                    monitor++;
 
-            }
-
+            Task.WaitAll(tasks.ToArray());
+            cts.Dispose();
             return results;
         }
 
@@ -78,4 +69,5 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             this.listener = listener;
         }
     }
+
 }
