@@ -17,6 +17,18 @@ namespace ExclusiveProgram
 
         #region 圖片預處理
 
+        #region 直方圖均衡化
+        public static void HistogramEqualization(Image<Bgr, byte> image,Image<Bgr,byte> outImage)
+        {
+            VectorOfMat channels = new VectorOfMat();
+            CvInvoke.Split(image, channels); 
+            CvInvoke.EqualizeHist(channels[0], channels[0]);
+            CvInvoke.EqualizeHist(channels[1], channels[1]);
+            CvInvoke.EqualizeHist(channels[2], channels[2]);
+            CvInvoke.Merge(channels, outImage); 
+        }
+
+        #endregion 直方圖均衡化
         #region 圖片顏色拓展
 
         public static void ExtendColor(Image<Bgr, byte> image,Image<Bgr,byte> outImage)
@@ -41,6 +53,7 @@ namespace ExclusiveProgram
                         { max = buffer; }
                     }
                 }
+
             }
 
             for (int i = 0; i < rowsCounts; i++)
