@@ -42,8 +42,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         public void PreprocessModelImage()
         {
             preprocessModelImage = new Image<Bgr, byte>(modelImage.Size);
-            VisualSystem.ExtendColor(modelImage,preprocessModelImage);
-            VisualSystem.WhiteBalance(preprocessModelImage,preprocessModelImage);
+            VisualSystem.ExtendColor(modelImage, preprocessModelImage);
+            //VisualSystem.WhiteBalance(preprocessModelImage,preprocessModelImage);
         }
 
         public bool ModelImagePreprocessIsDone()
@@ -56,7 +56,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             Image<Bgr,byte> observedImage = image.Clone();
 
             VisualSystem.ExtendColor(observedImage,observedImage);
-            VisualSystem.WhiteBalance(observedImage,observedImage);
+            //VisualSystem.WhiteBalance(observedImage,observedImage);
 
             long matchTime;
 

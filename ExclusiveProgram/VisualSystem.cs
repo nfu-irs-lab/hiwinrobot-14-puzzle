@@ -1,5 +1,11 @@
 ﻿using Emgu.CV;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
+using ExclusiveProgram.threading;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace ExclusiveProgram
 {
     public class VisualSystem
@@ -64,44 +70,56 @@ namespace ExclusiveProgram
         /// <returns></returns>
         public static void WhiteBalance(Image<Bgr, byte> img,Image<Bgr,byte> outImage)
         {
-            int avgR = 0, avgG = 0, avgB = 0;
-            int sumR = 0, sumG = 0, sumB = 0;
-            for (int h = 0; h < img.Height; ++h)
-            {
-                for (int w = 0; w < img.Width; ++w)
-                {
-                    sumB += img.Data[h, w, 0];
-                    sumG += img.Data[h, w, 1];
-                    sumR += img.Data[h, w, 2];
-                }
-            }
-            int size = img.Height * img.Width;
-            avgB = sumB / size;
-            avgG = sumG / size;
-            avgR = sumR / size;
+
+            VectorOfMat channels= new VectorOfMat();
+            CvInvoke.Split(img,channels);
+
+            var avgB = CvInvoke.Mean(channels[0]).V0;
+            var avgG = CvInvoke.Mean(channels[1]).V0;
+            var avgR = CvInvoke.Mean(channels[2]).V0;
             double k = 0.299 * avgR + 0.587 * avgG + 0.114 * avgB;
 
-            avgR = (sumR / size);
-            avgG = (sumG / size);
-            avgB = (sumB / size);
-
-            double kr = k / avgR;
-            double kg = k / avgG;
-            double kb = k / avgB;
-            double newB, newG, newR;
-            for (int h = 0; h < img.Height; ++h)
+            Task[] tasks=new Task[3];
+            tasks[0]=Task.Factory.StartNew(() =>
             {
-                for (int w = 0; w < img.Width; ++w)
+                double kb = k / avgB;
+                for (int h = 0; h < img.Height; ++h)
                 {
-                    newB = img.Data[h, w, 0] * kb;
-                    newG = img.Data[h, w, 1] * kg;
-                    newR = img.Data[h, w, 2] * kr;
-
-                    outImage.Data[h, w, 0] = (byte)(newB > 255 ? 255 : newB);
-                    outImage.Data[h, w, 1] = (byte)(newG > 255 ? 255 : newG);
-                    outImage.Data[h, w, 2] = (byte)(newR > 255 ? 255 : newR);
+                    for (int w = 0; w < img.Width; ++w)
+                    {
+                        var newB = img.Data[h, w, 0] * kb;
+                        outImage.Data[h, w, 0] = (byte)(newB > 255 ? 255 : newB);
+                    }
                 }
-            }
+            });
+
+            tasks[1]=Task.Factory.StartNew(() =>
+            {
+                double kg = k / avgG;
+                for (int h = 0; h < img.Height; ++h)
+                {
+                    for (int w = 0; w < img.Width; ++w)
+                    {
+                        var newG = img.Data[h, w, 1] * kg;
+                        outImage.Data[h, w, 1] = (byte)(newG > 255 ? 255 : newG);
+                    }
+                }
+            });
+
+            tasks[2]=Task.Factory.StartNew(() =>
+            {
+                double kr = k / avgR;
+                for (int h = 0; h < img.Height; ++h)
+                {
+                    for (int w = 0; w < img.Width; ++w)
+                    {
+                        var newR = img.Data[h, w, 2] * kr;
+                        outImage.Data[h, w, 2] = (byte)(newR > 255 ? 255 : newR);
+
+                    }
+                }
+            });
+            Task.WaitAll(tasks);
         }
 
         #endregion 白平衡
