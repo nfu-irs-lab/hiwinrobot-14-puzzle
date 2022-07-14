@@ -1,18 +1,13 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Features2D;
-using Emgu.CV.Flann;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using ExclusiveProgram.puzzle.visual.framework;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 /*
  * https://www.796t.com/post/OXRpbnE=.html
  * https://www.twblogs.net/a/5cb5e690bd9eee0eff45642b
@@ -74,25 +69,29 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 var b = GetDoubleValue(homography, 0, 0);
                 result.Angle = - Math.Atan2(a,b) * 180 / Math.PI;
                 //draw a rectangle along the projected model
-                Rectangle rect = new Rectangle(Point.Empty, preprocessModelImage.Size);
+                Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
 
-                PointF[] pts = new PointF[]
+                PointF[] points_on_observedImage= new PointF[]
                 {
-                      new PointF(rect.Left, rect.Bottom),
-                      new PointF(rect.Right, rect.Bottom),
+                      new PointF(rect.Left, rect.Top),
                       new PointF(rect.Right, rect.Top),
-                      new PointF(rect.Left, rect.Top)
+                      new PointF(rect.Right, rect.Bottom),
+                      new PointF(rect.Left, rect.Bottom)
                 };
-                var prespective_pts = CvInvoke.PerspectiveTransform(pts, homography);
-                if (listener != null)
-                    listener.OnPerspective(observedImage.Mat, preprocessModelImage.Mat, homography, prespective_pts);
 
-    #if NETFX_CORE
-           Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
-    #else
-                Point[] points = Array.ConvertAll<PointF, Point>(prespective_pts, Point.Round);
+
+                var perspective_points_on_modelImage = CvInvoke.PerspectiveTransform(points_on_observedImage, homography);
+
+                if (listener != null)
+                    listener.OnPerspective(observedImage.Mat, preprocessModelImage.Mat, homography, perspective_points_on_modelImage);
+
+                #if NETFX_CORE
+                    Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
+                #else
+                    Point[] points = Array.ConvertAll<PointF, Point>(perspective_points_on_modelImage, Point.Round);
                 
-    #endif
+                #endif
+
                 using (VectorOfPoint vp = new VectorOfPoint(points))
                 {
                     double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
@@ -114,39 +113,46 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     if (listener != null)
                         listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, vp, observedKeyPoints, matches, mask, matchTime, Slope, result.Angle);
 
+                    var corrected = corrector.Correct(image, -result.Angle);
+                    if(listener!=null)
+                        listener.OnCorrected(corrected);
+
+                    /*
+                     0     左下
+                     1     右下
+                     2     右上
+                     3     左上
+                    */
+                    int x_P = (int)Math.Abs(perspective_points_on_modelImage[2].X + perspective_points_on_modelImage[3].X) / 2;
+                    int y_P = (int)Math.Abs(perspective_points_on_modelImage[0].Y + perspective_points_on_modelImage[3].Y) / 2;
+                    if (Math.Abs(result.Angle) >= 90)
+                    {
+                        x_P = (int)Math.Abs(perspective_points_on_modelImage[3].X + perspective_points_on_modelImage[0].X) / 2;
+                        y_P = (int)Math.Abs(perspective_points_on_modelImage[1].Y + perspective_points_on_modelImage[0].Y) / 2;
+                    }
+
+                    Point puzzle_location_on_perspective_image = new Point(x_P, y_P);
+
+                    //分成7等分
+                    double width_per_puzzle=(preprocessModelImage.Width / 7.0f);
+                    //分成5等分
+                    double height_per_puzzle=(preprocessModelImage.Height / 5.0f);
+
+                    int x = (int)(puzzle_location_on_perspective_image.X / width_per_puzzle);
+                    int y = (int)(puzzle_location_on_perspective_image.Y / height_per_puzzle);
+
+                    if (x >= 7)
+                    { x = 6; }
+                    if (y >= 5)
+                    { y = 4; }
+
+                    result.position=y.ToString() + x.ToString();
                 }
-                var corrected = corrector.Correct(image, -result.Angle);
-                if(listener!=null)
-                    listener.OnCorrected(corrected);
-
-                /*
-                 0     左下
-                 1     右下
-                 2     右上
-                 3     左上
-                */
-
-                Point puzzle_central_point = new Point(corrected.Size.Width / 2, corrected.Size.Height / 2);
-
-
-                //分成7等分
-                double width_per_puzzle=(preprocessModelImage.Width / 7.0f);
-                //分成5等分
-                double height_per_puzzle=(preprocessModelImage.Height / 5.0f);
-
-                int x = (int)(puzzle_central_point.X / width_per_puzzle);
-                int y = (int)(puzzle_central_point.Y / height_per_puzzle);
-
-                if (x >= 7)
-                { x = 6; }
-                if (y >= 5)
-                { y = 4; }
-
-                result.position=y.ToString() + x.ToString();
             }
 
             return result; 
         }
+
 
         //四捨五入至想要位數
         private static double Round(double value, int d)

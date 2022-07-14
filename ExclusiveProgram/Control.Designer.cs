@@ -29,13 +29,14 @@
         private void InitializeComponent()
         {
             this.button1 = new System.Windows.Forms.Button();
-            this.numericUpDown_threshold = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDown_blockSize = new System.Windows.Forms.NumericUpDown();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.textBox_param = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.capture_image = new System.Windows.Forms.PictureBox();
             this.numericUpDown_uniqueness_threshold = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.corrector_threshold_numric = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
             this.backgroundColor_preview = new System.Windows.Forms.PictureBox();
             this.backgroundColor_textbox = new System.Windows.Forms.TextBox();
@@ -64,12 +65,11 @@
             this.corrector_result_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.recognize_match_puzzleView = new System.Windows.Forms.FlowLayoutPanel();
-            this.capture_image = new System.Windows.Forms.PictureBox();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_threshold)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_blockSize)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.capture_image)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_uniqueness_threshold)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.corrector_threshold_numric)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.backgroundColor_preview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.max_width_numeric)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.max_height_numeric)).BeginInit();
@@ -83,7 +83,6 @@
             this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.tabPage6.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.capture_image)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
@@ -97,19 +96,19 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // numericUpDown_threshold
+            // numericUpDown_blockSize
             // 
-            this.numericUpDown_threshold.Location = new System.Drawing.Point(141, 67);
-            this.numericUpDown_threshold.Maximum = new decimal(new int[] {
-            255,
+            this.numericUpDown_blockSize.Location = new System.Drawing.Point(109, 67);
+            this.numericUpDown_blockSize.Maximum = new decimal(new int[] {
+            10000,
             0,
             0,
             0});
-            this.numericUpDown_threshold.Name = "numericUpDown_threshold";
-            this.numericUpDown_threshold.Size = new System.Drawing.Size(68, 22);
-            this.numericUpDown_threshold.TabIndex = 5;
-            this.numericUpDown_threshold.Value = new decimal(new int[] {
-            165,
+            this.numericUpDown_blockSize.Name = "numericUpDown_blockSize";
+            this.numericUpDown_blockSize.Size = new System.Drawing.Size(68, 22);
+            this.numericUpDown_blockSize.TabIndex = 5;
+            this.numericUpDown_blockSize.Value = new decimal(new int[] {
+            300,
             0,
             0,
             0});
@@ -130,11 +129,11 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.textBox_param);
+            this.tabPage1.Controls.Add(this.label8);
             this.tabPage1.Controls.Add(this.capture_image);
             this.tabPage1.Controls.Add(this.numericUpDown_uniqueness_threshold);
             this.tabPage1.Controls.Add(this.label9);
-            this.tabPage1.Controls.Add(this.label8);
-            this.tabPage1.Controls.Add(this.corrector_threshold_numric);
             this.tabPage1.Controls.Add(this.label7);
             this.tabPage1.Controls.Add(this.backgroundColor_preview);
             this.tabPage1.Controls.Add(this.backgroundColor_textbox);
@@ -152,7 +151,7 @@
             this.tabPage1.Controls.Add(this.file_path);
             this.tabPage1.Controls.Add(this.button2);
             this.tabPage1.Controls.Add(this.button1);
-            this.tabPage1.Controls.Add(this.numericUpDown_threshold);
+            this.tabPage1.Controls.Add(this.numericUpDown_blockSize);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
@@ -160,6 +159,32 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "參數設定";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // textBox_param
+            // 
+            this.textBox_param.Location = new System.Drawing.Point(342, 67);
+            this.textBox_param.Name = "textBox_param";
+            this.textBox_param.Size = new System.Drawing.Size(100, 22);
+            this.textBox_param.TabIndex = 29;
+            this.textBox_param.Text = "-4";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("新細明體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.label8.Location = new System.Drawing.Point(233, 67);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(55, 16);
+            this.label8.TabIndex = 28;
+            this.label8.Text = "微調值";
+            // 
+            // capture_image
+            // 
+            this.capture_image.Location = new System.Drawing.Point(597, 6);
+            this.capture_image.Name = "capture_image";
+            this.capture_image.Size = new System.Drawing.Size(450, 337);
+            this.capture_image.TabIndex = 26;
+            this.capture_image.TabStop = false;
             // 
             // numericUpDown_uniqueness_threshold
             // 
@@ -188,33 +213,6 @@
             this.label9.TabIndex = 24;
             this.label9.Text = "獨特性臨界";
             // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Font = new System.Drawing.Font("新細明體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.label8.Location = new System.Drawing.Point(233, 67);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(119, 16);
-            this.label8.TabIndex = 23;
-            this.label8.Text = "校正二值化臨界";
-            // 
-            // corrector_threshold_numric
-            // 
-            this.corrector_threshold_numric.Location = new System.Drawing.Point(367, 67);
-            this.corrector_threshold_numric.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.corrector_threshold_numric.Name = "corrector_threshold_numric";
-            this.corrector_threshold_numric.Size = new System.Drawing.Size(68, 22);
-            this.corrector_threshold_numric.TabIndex = 22;
-            this.corrector_threshold_numric.Value = new decimal(new int[] {
-            165,
-            0,
-            0,
-            0});
-            // 
             // label7
             // 
             this.label7.AutoSize = true;
@@ -240,7 +238,7 @@
             this.backgroundColor_textbox.Name = "backgroundColor_textbox";
             this.backgroundColor_textbox.Size = new System.Drawing.Size(100, 22);
             this.backgroundColor_textbox.TabIndex = 19;
-            this.backgroundColor_textbox.Text = "#549368";
+            this.backgroundColor_textbox.Text = "#5B696A";
             this.backgroundColor_textbox.TextChanged += new System.EventHandler(this.backgroundColor_textbox_TextChanged);
             // 
             // max_width_numeric
@@ -309,7 +307,7 @@
             this.min_width_numeric.Size = new System.Drawing.Size(68, 22);
             this.min_width_numeric.TabIndex = 14;
             this.min_width_numeric.Value = new decimal(new int[] {
-            300,
+            175,
             0,
             0,
             0});
@@ -326,7 +324,7 @@
             this.min_height_numeric.Size = new System.Drawing.Size(68, 22);
             this.min_height_numeric.TabIndex = 13;
             this.min_height_numeric.Value = new decimal(new int[] {
-            300,
+            175,
             0,
             0,
             0});
@@ -377,9 +375,9 @@
             this.label1.Font = new System.Drawing.Font("新細明體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.label1.Location = new System.Drawing.Point(32, 67);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(87, 16);
+            this.label1.Size = new System.Drawing.Size(71, 16);
             this.label1.TabIndex = 8;
-            this.label1.Text = "二值化臨界";
+            this.label1.Text = "區塊大小";
             // 
             // file_path
             // 
@@ -387,7 +385,7 @@
             this.file_path.Name = "file_path";
             this.file_path.Size = new System.Drawing.Size(142, 22);
             this.file_path.TabIndex = 7;
-            this.file_path.Text = "samples\\\\Test.jpg";
+            this.file_path.Text = "samples\\\\Test2.jpg";
             // 
             // button2
             // 
@@ -513,14 +511,6 @@
             this.recognize_match_puzzleView.Size = new System.Drawing.Size(1044, 353);
             this.recognize_match_puzzleView.TabIndex = 11;
             // 
-            // capture_image
-            // 
-            this.capture_image.Location = new System.Drawing.Point(597, 6);
-            this.capture_image.Name = "capture_image";
-            this.capture_image.Size = new System.Drawing.Size(450, 337);
-            this.capture_image.TabIndex = 26;
-            this.capture_image.TabStop = false;
-            // 
             // Control
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -529,12 +519,12 @@
             this.Margin = new System.Windows.Forms.Padding(1);
             this.Name = "Control";
             this.Size = new System.Drawing.Size(1101, 481);
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_threshold)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_blockSize)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.capture_image)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_uniqueness_threshold)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.corrector_threshold_numric)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.backgroundColor_preview)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.max_width_numeric)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.max_height_numeric)).EndInit();
@@ -548,7 +538,6 @@
             this.tabPage4.ResumeLayout(false);
             this.tabPage5.ResumeLayout(false);
             this.tabPage6.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.capture_image)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -556,7 +545,7 @@
         #endregion
 
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.NumericUpDown numericUpDown_threshold;
+        private System.Windows.Forms.NumericUpDown numericUpDown_blockSize;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
@@ -577,8 +566,6 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.PictureBox backgroundColor_preview;
         private System.Windows.Forms.TextBox backgroundColor_textbox;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.NumericUpDown corrector_threshold_numric;
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.PictureBox capture_binarization_preview;
         private System.Windows.Forms.FlowLayoutPanel corrector_ROI_puzzleView;
@@ -592,5 +579,7 @@
         private System.Windows.Forms.NumericUpDown numericUpDown_uniqueness_threshold;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.PictureBox capture_image;
+        private System.Windows.Forms.TextBox textBox_param;
+        private System.Windows.Forms.Label label8;
     }
 }

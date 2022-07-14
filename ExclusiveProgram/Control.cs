@@ -10,43 +10,25 @@ using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using ExclusiveProgram.puzzle.visual.concrete;
+using ExclusiveProgram.puzzle.visual.concrete.locator;
 using ExclusiveProgram.puzzle.visual.framework;
 using ExclusiveProgram.ui.component;
 
 namespace ExclusiveProgram
 {
+
+    
     public partial class Control : MainForm.ExclusiveControl
     {
         //private VideoCapture capture;
         private delegate void DelShowResult(Puzzle_sturct puzzles);
+
+
         public Control()
         {
             InitializeComponent();
             Config = new Config();
-            //capture=new VideoCapture(0);
-            //capture.Set(CapProp.Brightness, 120);
-            //capture.Set(CapProp.Exposure, 5);
-            Thread thread = new Thread(monitor);
-            thread.Start();
         }
-
-        private void monitor()
-        {
-            /*
-              Mat mat=null;
-            while (true)
-            {
-                if(mat!=null)
-                    mat.Dispose();
-                var new_mat= capture.QueryFrame();
-                var image = new_mat.ToImage<Bgr,byte>().ToBitmap();
-                capture_image.Image = image;
-                mat = new_mat;
-                CvInvoke.WaitKey(100);
-            }
-            */
-        }
-
         private void button1_Click(object sender, EventArgs e)
         {
             corrector_binarization_puzzleView.Controls.Clear();
@@ -59,42 +41,44 @@ namespace ExclusiveProgram
 
         private void DoPuzzleVisual()
         {
-
+            
             var minSize = new Size((int)min_width_numeric.Value, (int)min_height_numeric.Value);
             var maxSize = new Size((int)max_width_numeric.Value, (int)max_height_numeric.Value);
-            var threshold = (int)numericUpDown_threshold.Value;
-            var locator = new PuzzleLocator(threshold, minSize, maxSize);
-            var uniquenessThreshold = ((double)numericUpDown_uniqueness_threshold.Value) * 0.01f;
+            var blockSize= (int)numericUpDown_blockSize.Value;
+            var param1= Double.Parse(textBox_param.Text);
 
-            locator.setListener(new MyPuzzleLocatorListener(this));
+            IPuzzleFactory factory = null;
+            try { 
+                var thresholdImpl = new AdaptivePuzzlePreProcessImpl(blockSize, param1);
+
+                var locator = new PuzzleLocator(minSize, maxSize,thresholdImpl);
+                var uniquenessThreshold = ((double)numericUpDown_uniqueness_threshold.Value) * 0.01f;
+
+                locator.setListener(new MyPuzzleLocatorListener(this));
 
 
-            var corrector_threshold = (int)corrector_threshold_numric.Value;
-            Color backgroundColor = getColorFromTextBox();
-            var corrector = new PuzzleCorrector(corrector_threshold,backgroundColor);
+                Color backgroundColor = getColorFromTextBox();
+                var corrector = new PuzzleCorrector(thresholdImpl,backgroundColor);
 
-            var modelImage = CvInvoke.Imread("samples\\modelImage2.jpg").ToImage<Bgr,byte>();
-            var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),corrector);
-            recognizer.setListener(new MyRecognizeListener(this));
+                var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr,byte>();
+                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),corrector);
+                recognizer.setListener(new MyRecognizeListener(this));
 
-            var factory = new DefaultPuzzleFactory(locator, recognizer, new PuzzleResultMerger(),2);
-            factory.setListener(new MyFactoryListener(this));
+                factory = new DefaultPuzzleFactory(locator, recognizer, new PuzzleResultMerger(),2);
+                factory.setListener(new MyFactoryListener(this));
+            }
+            catch(Exception ex) {
+                MessageBox.Show(ex.Message, "辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             var image  = CvInvoke.Imread(file_path.Text).ToImage<Bgr,byte>();
             capture_preview.Image = image.ToBitmap();
-            try
-            {
-                List<Puzzle_sturct> results = factory.Execute(image);
+            List<Puzzle_sturct> results = factory.Execute(image);
 
-                foreach (Puzzle_sturct result in results)
-                {
-                    ShowResult(result);
-                }
-            }
-            catch (Exception ex)
+            foreach (Puzzle_sturct result in results)
             {
-                Console.WriteLine("Error:" + ex.Message);
-                MessageBox.Show(ex.Message, "辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowResult(result);
             }
         }
 
@@ -216,21 +200,31 @@ namespace ExclusiveProgram
 
                 CvInvoke.PutText(resultImage, string.Format("{0}ms , Slop:{1:0.00} , Angle:{2:0.00}", matchTime, Slope,Angle), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
 
-                resultImage.Save("matching_results\\"+index+++".jpg");
+                resultImage.Save("matching_results\\"+index+".jpg");
                 resultImage.Dispose();
             }
 
-            public void OnPerspective(Mat observedImage,Mat modelImage,Mat homography,PointF[] pts)
+            public void OnPerspective(Mat observedImage,Mat modelImage,Mat homography,PointF[] prespective_pts)
             {
                 var perspective_image = new Mat(observedImage.Size,modelImage.Depth,3);
                 CvInvoke.WarpPerspective(modelImage, perspective_image, homography, observedImage.Size);
                 observedImage.Save("perspective_results\\R"+index+".jpg");
                 perspective_image.Save("perspective_results\\P"+index+".jpg");
+
+                int x_P = (int)Math.Abs(prespective_pts[2].X + prespective_pts[3].X) / 2;
+                int y_P = (int)Math.Abs(prespective_pts[0].Y + prespective_pts[3].Y) / 2;
+
+
+
+                modelImage.Save("perspective_results\\M" + index + ".jpg");
+                
+
+
             }
 
             public void OnCorrected(Image<Bgr, byte> image)
             {
-                image.Save("perspective_results\\C"+index+".jpg");
+                image.Save("perspective_results\\C"+index+++".jpg");
             }
         }
 

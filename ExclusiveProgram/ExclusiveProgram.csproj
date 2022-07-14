@@ -129,6 +129,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="puzzle.visual\concrete\DefaultPuzzleFactory.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\NormalPuzzlePreProcessImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\AdaptivePuzzlePreProcessImpl.cs" />
     <Compile Include="puzzle.visual\concrete\SiftFlannPuzzleRecognizerImpl.cs" />
     <Compile Include="puzzle.visual\concrete\SiftBfmPuzzleRecognizerImpl.cs" />
     <Compile Include="puzzle.visual\concrete\PuzzleCorrector.cs" />
@@ -140,6 +142,7 @@
     <Compile Include="puzzle.visual\framework\IPuzzleLocator.cs" />
     <Compile Include="puzzle.visual\framework\IPuzzleRecognizer.cs" />
     <Compile Include="puzzle.visual\framework\IPuzzleResultMerger.cs" />
+    <Compile Include="puzzle.visual\framework\utils\IPuzzlePreProcessImpl.cs" />
     <Compile Include="RecognizerTest.cs" />
     <Compile Include="threading\LimitedConcurrencyLevelTaskScheduler.cs" />
     <Compile Include="ui.component\UserControl1.cs">

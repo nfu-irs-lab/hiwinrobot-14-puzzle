@@ -3,6 +3,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using ExclusiveProgram.puzzle.visual.framework;
+using ExclusiveProgram.puzzle.visual.framework.utils;
 using System;
 using System.Drawing;
 
@@ -10,13 +11,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 {
     public class PuzzleCorrector : IPuzzleCorrector
     {
-        private readonly int thereshold;
+        private readonly IPuzzlePreProcessImpl thresholdImpl;
         private readonly Bgr backgroundColor;
         private PuzzleCorrectorListener listener;
 
-        public PuzzleCorrector(int Thereshold,Color backgroundColor)
+        public PuzzleCorrector(IPuzzlePreProcessImpl thresholdImpl,Color backgroundColor)
         {
-            thereshold = Thereshold;
+            this.thresholdImpl = thresholdImpl;
             this.backgroundColor = new Bgr(backgroundColor);
         }
         public Image<Bgr, byte> Correct(Image<Bgr, byte> ROI, double Angle)
@@ -54,8 +55,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             Image<Gray, byte> Out = new Image<Gray, byte>(new_img.Size);
 
-            CvInvoke.CvtColor(new_img, Out,ColorConversion.Bgr2Gray);
-            CvInvoke.Threshold(Out, Out, thereshold,255,ThresholdType.Binary);
+            thresholdImpl.Preprocess(new_img,Out);
+
             /*
             for (int i = 0; i < new_img.Rows; i++)
             {
@@ -71,13 +72,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 }
             }
             */
-
-            //定義結構元素
-            Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
-
-            //Erode:侵蝕，Dilate:擴張
-            CvInvoke.Dilate(Out, Out, Struct_element, new Point(1, 1), 6, BorderType.Default, new MCvScalar(0, 0, 0));
-            CvInvoke.Erode(Out, Out, Struct_element, new Point(-1, -1), 3, BorderType.Default, new MCvScalar(0, 0, 0));
 
             if(listener!=null)
                 listener.onPreprocessDone(Out);

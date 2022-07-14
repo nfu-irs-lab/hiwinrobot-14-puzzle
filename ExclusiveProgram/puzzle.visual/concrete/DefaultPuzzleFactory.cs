@@ -30,6 +30,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             factory = new TaskFactory(lcts);
             cts = new CancellationTokenSource();
         }
+
         public List<Puzzle_sturct> Execute(Image<Bgr, byte> input)
         {
             if (!recognizer.ModelImagePreprocessIsDone())
