@@ -144,7 +144,6 @@
     <Compile Include="puzzle.visual\framework\IPuzzleRecognizer.cs" />
     <Compile Include="puzzle.visual\framework\IPuzzleResultMerger.cs" />
     <Compile Include="puzzle.visual\framework\utils\IPuzzlePreProcessImpl.cs" />
-    <Compile Include="RecognizerTest.cs" />
     <Compile Include="threading\LimitedConcurrencyLevelTaskScheduler.cs" />
     <Compile Include="ui.component\UserControl1.cs">
       <SubType>UserControl</SubType>

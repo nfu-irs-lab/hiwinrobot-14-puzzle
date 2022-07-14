@@ -13,16 +13,18 @@ namespace ExclusiveProgram.puzzle.visual.concrete
     {
         private IPuzzleRecognizer recognizer;
         private IPuzzleLocator locator;
+        private readonly IPuzzleCorrector corrector;
         private readonly IPuzzleResultMerger merger;
         private readonly IPuzzlePreProcessImpl preProcessImpl;
         private PuzzleFactoryListener listener;
         private readonly TaskFactory factory;
         private readonly CancellationTokenSource cts;
 
-        public DefaultPuzzleFactory(IPuzzleLocator locator, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,IPuzzlePreProcessImpl preProcessImpl,int threadCount)
+        public DefaultPuzzleFactory(IPuzzleLocator locator,IPuzzleCorrector corrector, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,IPuzzlePreProcessImpl preProcessImpl,int threadCount)
         {
             this.recognizer = recognizer;
             this.locator = locator;
+            this.corrector = corrector;
             this.merger = merger;
             this.preProcessImpl = preProcessImpl;
 
@@ -60,16 +62,23 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             {
                 Task task = factory.StartNew(() =>
                 {
+                    /*
+                    var corrected = corrector.Correct(location.ROI, location.Angle);
+                    if(listener!=null)
+                        listener.onCorrected(corrected);
+                    */
+
                     var recognized_result = recognizer.Recognize(location.ROI);
                     if (listener != null)
                         listener.onRecognized(recognized_result);
 
                     results.Add(merger.merge(location, location.ROI, recognized_result));
                 },cts.Token);
+                task.Wait();
                 tasks.Add(task);
             }
 
-            Task.WaitAll(tasks.ToArray());
+            //Task.WaitAll(tasks.ToArray());
             stage1.Dispose();
             stage2.Dispose();
             cts.Dispose();

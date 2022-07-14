@@ -71,24 +71,24 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 //draw a rectangle along the projected model
                 Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
 
-                PointF[] points_on_observedImage= new PointF[]
+                PointF[] points_on_modelImage = new PointF[]
                 {
-                      new PointF(rect.Left, rect.Top),
-                      new PointF(rect.Right, rect.Top),
+                      new PointF(rect.Left, rect.Bottom),
                       new PointF(rect.Right, rect.Bottom),
-                      new PointF(rect.Left, rect.Bottom)
+                      new PointF(rect.Right, rect.Top),
+                      new PointF(rect.Left, rect.Top)
                 };
 
 
-                var perspective_points_on_modelImage = CvInvoke.PerspectiveTransform(points_on_observedImage, homography);
+                var perspective_pts = CvInvoke.PerspectiveTransform(points_on_modelImage, homography);
 
                 if (listener != null)
-                    listener.OnPerspective(observedImage.Mat, preprocessModelImage.Mat, homography, perspective_points_on_modelImage);
+                    listener.OnPerspective(observedImage.Mat, preprocessModelImage.Mat, homography, perspective_pts,result.Angle);
 
                 #if NETFX_CORE
                     Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
                 #else
-                    Point[] points = Array.ConvertAll<PointF, Point>(perspective_points_on_modelImage, Point.Round);
+                    Point[] points = Array.ConvertAll<PointF, Point>(perspective_pts, Point.Round);
                 
                 #endif
 
@@ -113,9 +113,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     if (listener != null)
                         listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, vp, observedKeyPoints, matches, mask, matchTime, Slope, result.Angle);
 
-                    var corrected = corrector.Correct(image, -result.Angle);
-                    if(listener!=null)
-                        listener.OnCorrected(corrected);
 
                     /*
                      0     左下
@@ -123,23 +120,19 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                      2     右上
                      3     左上
                     */
-                    int x_P = (int)Math.Abs(perspective_points_on_modelImage[2].X + perspective_points_on_modelImage[3].X) / 2;
-                    int y_P = (int)Math.Abs(perspective_points_on_modelImage[0].Y + perspective_points_on_modelImage[3].Y) / 2;
-                    if (Math.Abs(result.Angle) >= 90)
+
+
+                    int x_P = (int)Math.Abs(perspective_pts[2].X + perspective_pts[3].X) / 2;
+                    int y_P = (int)Math.Abs(perspective_pts[0].Y + perspective_pts[3].Y) / 2;
+
+                    if (Math.Abs(result.Angle) == 90)
                     {
-                        x_P = (int)Math.Abs(perspective_points_on_modelImage[3].X + perspective_points_on_modelImage[0].X) / 2;
-                        y_P = (int)Math.Abs(perspective_points_on_modelImage[1].Y + perspective_points_on_modelImage[0].Y) / 2;
+                        x_P = (int)Math.Abs(perspective_pts[3].X + perspective_pts[0].X) / 2;
+                        y_P = (int)Math.Abs(perspective_pts[1].Y + perspective_pts[0].Y) / 2;
                     }
 
-                    Point puzzle_location_on_perspective_image = new Point(x_P, y_P);
-
-                    //分成7等分
-                    double width_per_puzzle=(preprocessModelImage.Width / 7.0f);
-                    //分成5等分
-                    double height_per_puzzle=(preprocessModelImage.Height / 5.0f);
-
-                    int x = (int)(puzzle_location_on_perspective_image.X / width_per_puzzle);
-                    int y = (int)(puzzle_location_on_perspective_image.Y / height_per_puzzle);
+                    int x = (int)x_P / (modelImage.Width / 7);
+                    int y = (int)y_P / (modelImage.Height / 5);
 
                     if (x >= 7)
                     { x = 6; }
