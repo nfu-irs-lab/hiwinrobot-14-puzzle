@@ -34,7 +34,6 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.textBox_param = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.capture_image = new System.Windows.Forms.PictureBox();
             this.numericUpDown_uniqueness_threshold = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
@@ -68,7 +67,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_blockSize)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.capture_image)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_uniqueness_threshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.backgroundColor_preview)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.max_width_numeric)).BeginInit();
@@ -98,9 +96,9 @@
             // 
             // numericUpDown_blockSize
             // 
-            this.numericUpDown_blockSize.Location = new System.Drawing.Point(109, 67);
+            this.numericUpDown_blockSize.Location = new System.Drawing.Point(141, 67);
             this.numericUpDown_blockSize.Maximum = new decimal(new int[] {
-            10000,
+            255,
             0,
             0,
             0});
@@ -108,7 +106,7 @@
             this.numericUpDown_blockSize.Size = new System.Drawing.Size(68, 22);
             this.numericUpDown_blockSize.TabIndex = 5;
             this.numericUpDown_blockSize.Value = new decimal(new int[] {
-            300,
+            180,
             0,
             0,
             0});
@@ -131,7 +129,6 @@
             // 
             this.tabPage1.Controls.Add(this.textBox_param);
             this.tabPage1.Controls.Add(this.label8);
-            this.tabPage1.Controls.Add(this.capture_image);
             this.tabPage1.Controls.Add(this.numericUpDown_uniqueness_threshold);
             this.tabPage1.Controls.Add(this.label9);
             this.tabPage1.Controls.Add(this.label7);
@@ -164,9 +161,9 @@
             // 
             this.textBox_param.Location = new System.Drawing.Point(342, 67);
             this.textBox_param.Name = "textBox_param";
-            this.textBox_param.Size = new System.Drawing.Size(100, 22);
+            this.textBox_param.Size = new System.Drawing.Size(68, 22);
             this.textBox_param.TabIndex = 29;
-            this.textBox_param.Text = "-4";
+            this.textBox_param.Text = "0.4";
             // 
             // label8
             // 
@@ -174,17 +171,9 @@
             this.label8.Font = new System.Drawing.Font("新細明體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.label8.Location = new System.Drawing.Point(233, 67);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(55, 16);
+            this.label8.Size = new System.Drawing.Size(87, 16);
             this.label8.TabIndex = 28;
-            this.label8.Text = "微調值";
-            // 
-            // capture_image
-            // 
-            this.capture_image.Location = new System.Drawing.Point(597, 6);
-            this.capture_image.Name = "capture_image";
-            this.capture_image.Size = new System.Drawing.Size(450, 337);
-            this.capture_image.TabIndex = 26;
-            this.capture_image.TabStop = false;
+            this.label8.Text = "綠色加權值";
             // 
             // numericUpDown_uniqueness_threshold
             // 
@@ -375,9 +364,9 @@
             this.label1.Font = new System.Drawing.Font("新細明體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.label1.Location = new System.Drawing.Point(32, 67);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(71, 16);
+            this.label1.Size = new System.Drawing.Size(103, 16);
             this.label1.TabIndex = 8;
-            this.label1.Text = "區塊大小";
+            this.label1.Text = "二值化臨界值";
             // 
             // file_path
             // 
@@ -523,7 +512,6 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.capture_image)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_uniqueness_threshold)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.backgroundColor_preview)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.max_width_numeric)).EndInit();
@@ -578,7 +566,6 @@
         private System.Windows.Forms.FlowLayoutPanel recognize_match_puzzleView;
         private System.Windows.Forms.NumericUpDown numericUpDown_uniqueness_threshold;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.PictureBox capture_image;
         private System.Windows.Forms.TextBox textBox_param;
         private System.Windows.Forms.Label label8;
     }

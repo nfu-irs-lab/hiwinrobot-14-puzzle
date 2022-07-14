@@ -21,15 +21,22 @@ namespace ExclusiveProgram.puzzle.visual.concrete.locator
             this.threshold = threshold;
         }
 
-        public void Preprocess(Image<Bgr, byte> input, Image<Gray, byte> output)
+        public void ConvertToGray(Image<Bgr, byte> input, Image<Gray, byte> output)
+        {
+            CvInvoke.CvtColor(input, output, ColorConversion.Bgr2Gray);
+        }
+
+        public void Preprocess(Image<Bgr, byte> input, Image<Bgr, byte> output)
+        {
+            VisualSystem.WhiteBalance(input,output);
+            VisualSystem.ExtendColor(output,output);
+            CvInvoke.MedianBlur(output, output, 27);
+        }
+
+        public void Threshold(Image<Gray, byte> input, Image<Gray, byte> output)
         {
 
-            var dst = new Image<Bgr, byte>(input.Size);
-            VisualSystem.WhiteBalance(input,dst);
-            VisualSystem.ExtendColor(dst,dst);
-            CvInvoke.MedianBlur(dst, dst, 27);
-            CvInvoke.Threshold(dst, output, 255,threshold,ThresholdType.Binary);
-
+            CvInvoke.Threshold(input, output, 255,threshold,ThresholdType.Binary);
             //定義結構元素
             Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
             //Erode:侵蝕，Dilate:擴張

@@ -14,6 +14,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         void onLocated(List<LocationResult> results);
         void onCorrected(Image<Bgr,byte> result);
         void onRecognized(RecognizeResult result);
+        void onPreprocessDone(Image<Gray, byte> result);
     }
     public interface IPuzzleFactory
     {

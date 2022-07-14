@@ -10,12 +10,6 @@ using System.Threading.Tasks;
 namespace ExclusiveProgram.puzzle.visual.framework
 {
     
-    public interface PuzzleLocatorListener
-    {
-        void onPreprocessDone(Image<Gray, byte> result);
-
-        void onLocated(LocationResult result);
-    }
 
     public struct LocationResult
     {
@@ -23,11 +17,11 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public double Angle;
         public Size Size;
         public Image<Bgr,byte> ROI;
+        public Image<Gray,byte> BinaryROI;
     }
 
     public interface IPuzzleLocator
     {
-        List<LocationResult> Locate(Image<Bgr, byte> input);
-        void setListener(PuzzleLocatorListener listener);
+        List<LocationResult> Locate(Image<Gray, byte> binaryImage, Image<Bgr, byte> rawImage);
     }
 }

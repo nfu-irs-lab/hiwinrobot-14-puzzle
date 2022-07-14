@@ -49,22 +49,20 @@ namespace ExclusiveProgram
 
             IPuzzleFactory factory = null;
             try { 
-                var thresholdImpl = new AdaptivePuzzlePreProcessImpl(blockSize, param1);
+                var preProcessImpl = new GreenBackgroundPuzzlePreProcessImpl(blockSize,param1);
 
-                var locator = new PuzzleLocator(minSize, maxSize,thresholdImpl);
+                var locator = new PuzzleLocator(minSize, maxSize);
                 var uniquenessThreshold = ((double)numericUpDown_uniqueness_threshold.Value) * 0.01f;
-
-                locator.setListener(new MyPuzzleLocatorListener(this));
 
 
                 Color backgroundColor = getColorFromTextBox();
-                var corrector = new PuzzleCorrector(thresholdImpl,backgroundColor);
+                var corrector = new PuzzleCorrector(preProcessImpl,backgroundColor);
 
                 var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr,byte>();
                 var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),corrector);
                 recognizer.setListener(new MyRecognizeListener(this));
 
-                factory = new DefaultPuzzleFactory(locator, recognizer, new PuzzleResultMerger(),2);
+                factory = new DefaultPuzzleFactory(locator, recognizer, new PuzzleResultMerger(),preProcessImpl,2);
                 factory.setListener(new MyFactoryListener(this));
             }
             catch(Exception ex) {
@@ -148,39 +146,6 @@ namespace ExclusiveProgram
         }
 
 
-        private class MyPuzzleLocatorListener : PuzzleLocatorListener
-        {
-            private delegate void DelonPreprocessDone(Image<Gray, byte> result);
-
-            public MyPuzzleLocatorListener(Control ui)
-            {
-                this.ui = ui;
-            }
-
-            private readonly Control ui;
-
-            public void onBinarizationDone(Image<Gray, byte> result)
-            {
-            }
-
-            public void onLocated(LocationResult result)
-            {
-
-            }
-
-            public void onPreprocessDone(Image<Gray, byte> result)
-            {
-                if (this.ui.InvokeRequired)
-                {
-                    DelonPreprocessDone del = new DelonPreprocessDone(onPreprocessDone);
-                    this.ui.Invoke(del,result);
-                }
-                else
-                {
-                    ui.capture_binarization_preview.Image=result.ToBitmap();
-                }
-            }
-        }
 
         private class MyRecognizeListener : PuzzleRecognizerListener
         {
@@ -232,12 +197,27 @@ namespace ExclusiveProgram
         {
             private delegate void DelonLocated(List<LocationResult> results);
             private delegate void DelOnCorrected(Image<Bgr, byte> result);
+            private delegate void DelonPreprocessDone(Image<Gray, byte> result);
             public MyFactoryListener(Control ui)
             {
                 this.ui = ui;
             }
 
             private readonly Control ui;
+
+            public void onPreprocessDone(Image<Gray, byte> result)
+            {
+                if (this.ui.InvokeRequired)
+                {
+                    DelonPreprocessDone del = new DelonPreprocessDone(onPreprocessDone);
+                    this.ui.Invoke(del,result);
+                }
+                else
+                {
+
+                    ui.capture_binarization_preview.Image=result.ToBitmap();
+                }
+            }
 
             public void onLocated(List<LocationResult> results)
             {

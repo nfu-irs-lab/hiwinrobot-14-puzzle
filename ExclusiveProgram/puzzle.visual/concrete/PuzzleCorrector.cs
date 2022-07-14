@@ -45,17 +45,11 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //將圖片旋轉(矯正[rectify]用)，旋轉出邊界顏色使用ROI_HSV值轉RGB(後續處理方便)
             new_img = new_img.Rotate(Angle, backgroundColor);
 
-            //new_ing._EqualizeHist();
-            //進一步縮小圖片
-            //尋找輪廓組函式
-            VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
-
-            //尋找輪廓函式
-            VectorOfPoint contour = new VectorOfPoint();
-
             Image<Gray, byte> Out = new Image<Gray, byte>(new_img.Size);
-
-            thresholdImpl.Preprocess(new_img,Out);
+            Image<Bgr, byte> stage1= new Image<Bgr, byte>(new_img.Size);
+            thresholdImpl.Preprocess(new_img, stage1);
+            thresholdImpl.ConvertToGray(stage1, Out);
+            thresholdImpl.Threshold(Out, Out);
 
             /*
             for (int i = 0; i < new_img.Rows; i++)
@@ -73,8 +67,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             }
             */
 
-            if(listener!=null)
-                listener.onPreprocessDone(Out);
+            //new_ing._EqualizeHist();
+            //進一步縮小圖片
+            //尋找輪廓組函式
+            VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
+
+            //尋找輪廓函式
+            VectorOfPoint contour = new VectorOfPoint();
 
             //尋找輪廓
             CvInvoke.FindContours(Out, contours, null, RetrType.External, ChainApproxMethod.ChainApproxSimple);

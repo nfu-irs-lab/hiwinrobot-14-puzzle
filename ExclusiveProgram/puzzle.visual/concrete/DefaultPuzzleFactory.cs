@@ -1,6 +1,7 @@
 ﻿using Emgu.CV;
 using Emgu.CV.Structure;
 using ExclusiveProgram.puzzle.visual.framework;
+using ExclusiveProgram.puzzle.visual.framework.utils;
 using ExclusiveProgram.threading;
 using System.Collections.Generic;
 using System.Threading;
@@ -13,15 +14,17 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private IPuzzleRecognizer recognizer;
         private IPuzzleLocator locator;
         private readonly IPuzzleResultMerger merger;
+        private readonly IPuzzlePreProcessImpl preProcessImpl;
         private PuzzleFactoryListener listener;
         private readonly TaskFactory factory;
         private readonly CancellationTokenSource cts;
 
-        public DefaultPuzzleFactory(IPuzzleLocator locator, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,int threadCount)
+        public DefaultPuzzleFactory(IPuzzleLocator locator, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,IPuzzlePreProcessImpl preProcessImpl,int threadCount)
         {
             this.recognizer = recognizer;
             this.locator = locator;
             this.merger = merger;
+            this.preProcessImpl = preProcessImpl;
 
             // Create a scheduler that uses two threads.
             LimitedConcurrencyLevelTaskScheduler lcts = new LimitedConcurrencyLevelTaskScheduler(threadCount);
@@ -36,8 +39,15 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             if (!recognizer.ModelImagePreprocessIsDone())
                 recognizer.PreprocessModelImage();
 
-            var image = input.Clone();
-            List<LocationResult> dataList = locator.Locate(image);
+            Image<Bgr, byte> stage1= new Image<Bgr, byte>(input.Size);
+            Image<Gray, byte> stage2= new Image<Gray, byte>(input.Size);
+            preProcessImpl.Preprocess(input,stage1);
+            preProcessImpl.ConvertToGray(stage1,stage2);
+            preProcessImpl.Threshold(stage2,stage2);
+            if (listener != null)
+                listener.onPreprocessDone(stage2);
+
+            List<LocationResult> dataList = locator.Locate(stage2,input);
             if (listener != null)
                 listener.onLocated(dataList);
 
@@ -55,12 +65,13 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                         listener.onRecognized(recognized_result);
 
                     results.Add(merger.merge(location, location.ROI, recognized_result));
-                    image.Dispose();
                 },cts.Token);
                 tasks.Add(task);
             }
 
             Task.WaitAll(tasks.ToArray());
+            stage1.Dispose();
+            stage2.Dispose();
             cts.Dispose();
             return results;
         }

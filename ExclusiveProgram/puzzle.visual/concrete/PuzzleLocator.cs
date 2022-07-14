@@ -15,31 +15,22 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 {
     public class PuzzleLocator : IPuzzleLocator
     {
-        private PuzzleLocatorListener listener;
         private readonly Size minSize;
         private readonly Size maxSize;
-        private readonly IPuzzlePreProcessImpl thesholdImpl;
 
-        public PuzzleLocator(Size minSize, Size maxSize,IPuzzlePreProcessImpl impl)
+        public PuzzleLocator(Size minSize, Size maxSize)
         {
             this.minSize = minSize;
             this.maxSize = maxSize;
-            this.thesholdImpl = impl;
         }
 
 
-        public List<LocationResult> Locate(Image<Bgr, byte> input)
+        public List<LocationResult> Locate(Image<Gray, byte> binaryImage,Image<Bgr,byte> rawImage)
         {
-            var bin=new Image<Gray, byte>(input.Size);
-            thesholdImpl.Preprocess(input, bin);
-
-            if (listener != null)
-                listener.onPreprocessDone(bin);
-
+            
             List<LocationResult> puzzleDataList = new List<LocationResult>();
-
             //取得輪廓組套件
-            VectorOfVectorOfPoint contours = findContours(bin);
+            VectorOfVectorOfPoint contours = findContours(binaryImage);
             //尋遍輪廓組之單一輪廓
             for (int i = 0; i < contours.Size; i++)
             {
@@ -74,10 +65,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     puzzleData.Angle = getAngle(BoundingBox, BoundingBox_, rect);
                     puzzleData.Coordinate = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);
-                    puzzleData.ROI = getROI(puzzleData.Coordinate,puzzleData.Size,input);
+                    puzzleData.ROI = getROI(puzzleData.Coordinate,puzzleData.Size,rawImage);
+                    puzzleData.BinaryROI= getBinaryROI(puzzleData.Coordinate,puzzleData.Size,binaryImage);
                     puzzleDataList.Add(puzzleData);
-                    if (listener != null)
-                        listener.onLocated(puzzleData);
                 }
 
             }
@@ -92,6 +82,14 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //將ROI選取區域使用Mat型式讀取
             return new Mat(input.Mat, rect).ToImage<Bgr, byte>();
         }
+        private Image<Gray,byte> getBinaryROI(Point Coordinate,Size Size,Image<Gray,byte> input)
+        {
+            Rectangle rect = new Rectangle((int)(Coordinate.X - Size.Width / 2.0f), (int)(Coordinate.Y - Size.Height / 2.0f), Size.Width, Size.Height);
+
+            //將ROI選取區域使用Mat型式讀取
+            return new Mat(input.Mat, rect).ToImage<Gray, byte>();
+        }
+
         private bool CheckSize(Rectangle rect, Point Position)
         {
             if (rect.Size.Width < minSize.Width || rect.Size.Height < minSize.Height)
@@ -172,9 +170,5 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             return Angel;
         }
 
-        public void setListener(PuzzleLocatorListener listener)
-        {
-            this.listener = listener;   
-        }
     }
 }
