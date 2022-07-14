@@ -4,6 +4,7 @@ using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using ExclusiveProgram.puzzle.visual.framework;
+using ExclusiveProgram.puzzle.visual.framework.utils;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -18,39 +19,38 @@ namespace ExclusiveProgram.puzzle.visual.concrete
     public class PuzzleRecognizer : IPuzzleRecognizer
     {
 
-        private Image<Bgr,byte> preprocessModelImage=null;
+        private Image<Bgr, byte> preprocessModelImage = null;
         private readonly PuzzleRecognizerImpl impl;
-        private readonly IPuzzleCorrector corrector;
+        private readonly IPuzzlePreProcessImpl puzzlePreProcessImpl;
         private readonly Image<Bgr, byte> modelImage;
         private readonly double uniquenessThreshold;
         private PuzzleRecognizerListener listener;
 
 
-        public PuzzleRecognizer(Image<Bgr,byte> modelImage,double uniquenessThreshold,PuzzleRecognizerImpl impl,IPuzzleCorrector corrector)
+        public PuzzleRecognizer(Image<Bgr, byte> modelImage, double uniquenessThreshold, PuzzleRecognizerImpl impl, IPuzzlePreProcessImpl puzzlePreProcessImpl)
         {
             this.modelImage = modelImage;
             this.uniquenessThreshold = uniquenessThreshold;
             this.impl = impl;
-            this.corrector = corrector;
+            this.puzzlePreProcessImpl = puzzlePreProcessImpl;
         }
 
         public void PreprocessModelImage()
         {
             preprocessModelImage = new Image<Bgr, byte>(modelImage.Size);
-            VisualSystem.ExtendColor(modelImage, preprocessModelImage);
-            //VisualSystem.WhiteBalance(preprocessModelImage,preprocessModelImage);
+            puzzlePreProcessImpl.Preprocess(modelImage,preprocessModelImage);
         }
 
         public bool ModelImagePreprocessIsDone()
         {
-            return preprocessModelImage!=null;
+            return preprocessModelImage != null;
         }
 
-        public RecognizeResult Recognize(Image<Bgr,byte> image)
+        public RecognizeResult Recognize(Image<Bgr, byte> image)
         {
-            Image<Bgr,byte> observedImage = image.Clone();
+            Image<Bgr, byte> observedImage = image.Clone();
 
-            VisualSystem.ExtendColor(observedImage,observedImage);
+            VisualSystem.ExtendColor(observedImage, observedImage);
             //VisualSystem.WhiteBalance(observedImage,observedImage);
 
             long matchTime;
@@ -62,16 +62,29 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             Mat mask;
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
             {
-                MatchFeaturePointsAndFindMask(observedImage.Mat,preprocessModelImage.Mat,out modelKeyPoints,out observedKeyPoints,matches, out mask, out matchTime);
+                MatchFeaturePointsAndFindMask(observedImage.Mat, preprocessModelImage.Mat, out modelKeyPoints, out observedKeyPoints, matches, out mask, out matchTime);
+
+                if (listener != null)
+                    listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, observedKeyPoints, matches, mask, matchTime);
+
                 Mat homography = FindHomography(modelKeyPoints, observedKeyPoints, matches, mask);
 
-                var a = GetDoubleValue(homography, 0, 1);
-                var b = GetDoubleValue(homography, 0, 0);
-                result.Angle = - Math.Atan2(a,b) * 180 / Math.PI;
-                //draw a rectangle along the projected model
-                Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
+                result.Angle = -Math.Atan2(GetDoubleValue(homography, 0, 1), GetDoubleValue(homography, 0, 0)) * 180 / Math.PI;
 
-                PointF[] points_on_modelImage = new PointF[]
+                Mat invert_homography = homography.Clone();
+                CvInvoke.Invert(invert_homography, invert_homography, DecompMethod.Svd);
+                var invert_perspectiveImage = new Mat(preprocessModelImage.Size, preprocessModelImage.Mat.Depth, 3);
+                CvInvoke.WarpPerspective(observedImage, invert_perspectiveImage, invert_homography, preprocessModelImage.Size);
+
+                Rectangle rect = new Rectangle(Point.Empty, observedImage.Size);
+
+                /*
+                 0     左下
+                 1     右下
+                 2     右上
+                 3     左上
+                */
+                PointF[] points_on_observedImage = new PointF[]
                 {
                       new PointF(rect.Left, rect.Bottom),
                       new PointF(rect.Right, rect.Bottom),
@@ -79,71 +92,34 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                       new PointF(rect.Left, rect.Top)
                 };
 
+                var point_on_modelImage = CvInvoke.PerspectiveTransform(points_on_observedImage, invert_homography);
+                Point[] points = Array.ConvertAll<PointF, Point>(point_on_modelImage, Point.Round);
+                int x_P = (int)Math.Abs(point_on_modelImage[2].X + point_on_modelImage[3].X) / 2;
+                int y_P = (int)Math.Abs(point_on_modelImage[0].Y + point_on_modelImage[3].Y) / 2;
 
-                var perspective_pts = CvInvoke.PerspectiveTransform(points_on_modelImage, homography);
+                /*
+                if (Math.Abs(result.Angle)>=90)
+                {
+                    x_P = (int)Math.Abs(point_on_modelImage[3].X + point_on_modelImage[0].X) / 2;
+                    y_P = (int)Math.Abs(point_on_modelImage[1].Y + point_on_modelImage[0].Y) / 2;
+                }
+                */
+
+
+                int x = (int)x_P / (modelImage.Width / 7);
+                int y = (int)y_P / (modelImage.Height / 5);
+
+                if (x >= 7)
+                    x = 6;
+                if (y >= 5)
+                { y = 4; }
+
+                result.position = y + "" + x.ToString();
 
                 if (listener != null)
-                    listener.OnPerspective(observedImage.Mat, preprocessModelImage.Mat, homography, perspective_pts,result.Angle);
-
-                #if NETFX_CORE
-                    Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
-                #else
-                    Point[] points = Array.ConvertAll<PointF, Point>(perspective_pts, Point.Round);
-                
-                #endif
-
-                using (VectorOfPoint vp = new VectorOfPoint(points))
-                {
-                    double Slope = Math.Atan2(points[2].Y - points[3].Y, points[2].X - points[3].X) * (180 / Math.PI);
-
-                    int w = Math.Abs(points[2].X - points[3].X);
-                    int h = Math.Abs(points[0].Y - points[3].Y);
-
-                    if (w < 50 && h < 50)
-                    {
-                        h = Math.Abs(points[3].X - points[0].X);
-                        w = Math.Abs(points[1].Y - points[0].Y);
-                    }
-
-                    int width = preprocessModelImage.Width,
-                        height = preprocessModelImage.Height;
-                    //if (w >= modelImage.Width * 0.75 && h >= modelImage.Height * 0.75 && w < modelImage.Width * 1.3 && h < modelImage.Height * 1.3)
-                    //{ Check_Image_Bool = true; }
-
-                    if (listener != null)
-                        listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, vp, observedKeyPoints, matches, mask, matchTime, Slope, result.Angle);
-
-
-                    /*
-                     0     左下
-                     1     右下
-                     2     右上
-                     3     左上
-                    */
-
-
-                    int x_P = (int)Math.Abs(perspective_pts[2].X + perspective_pts[3].X) / 2;
-                    int y_P = (int)Math.Abs(perspective_pts[0].Y + perspective_pts[3].Y) / 2;
-
-                    if (Math.Abs(result.Angle) == 90)
-                    {
-                        x_P = (int)Math.Abs(perspective_pts[3].X + perspective_pts[0].X) / 2;
-                        y_P = (int)Math.Abs(perspective_pts[1].Y + perspective_pts[0].Y) / 2;
-                    }
-
-                    int x = (int)x_P / (modelImage.Width / 7);
-                    int y = (int)y_P / (modelImage.Height / 5);
-
-                    if (x >= 7)
-                    { x = 6; }
-                    if (y >= 5)
-                    { y = 4; }
-
-                    result.position=y.ToString() + x.ToString();
-                }
+                    listener.OnPerspective(invert_perspectiveImage.ToImage<Bgr,byte>(), result.position);
             }
-
-            return result; 
+            return result;
         }
 
 
@@ -161,15 +137,15 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         /// <param name="observedImage">The observed image</param>
         /// <param name="matchTime">The output total time for computing the homography matrix.</param>
         /// <returns>The model image and observed image, the matched features and homography projection.</returns>
-        private void MatchFeaturePointsAndFindMask(Mat observedImage,Mat modelImage,out VectorOfKeyPoint modelKeyPoints,out VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches,out Mat mask, out long matchTime)
+        private void MatchFeaturePointsAndFindMask(Mat observedImage, Mat modelImage, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out long matchTime)
         {
             modelKeyPoints = new VectorOfKeyPoint();
             observedKeyPoints = new VectorOfKeyPoint();
-            matchTime = FindFeaturePointsAndMatch(modelImage,observedImage,modelKeyPoints,observedKeyPoints, matches); 
+            matchTime = FindFeaturePointsAndMatch(modelImage, observedImage, modelKeyPoints, observedKeyPoints, matches);
             mask = GetMaskFromMatches(matches);
         }
 
-        private long FindFeaturePointsAndMatch(Mat modelImage, Mat observedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints,VectorOfVectorOfDMatch matches)
+        private long FindFeaturePointsAndMatch(Mat modelImage, Mat observedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches)
         {
             //using (UMat uModelImage = modelImage.GetUMat(AccessType.ReadWrite))
             //using (UMat uObservedImage = observedImage.GetUMat(AccessType.ReadWrite))
@@ -179,11 +155,11 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             Mat modelDescriptors = new Mat();
             impl.DetectFeatures(modelImage, null, modelKeyPoints, modelDescriptors, false);
-            
+
             Mat observedDescriptors = new Mat();
             impl.DetectFeatures(observedImage, null, observedKeyPoints, observedDescriptors, false);
 
-            impl.MatchFeatures(modelDescriptors,observedDescriptors,modelKeyPoints,observedKeyPoints,matches);
+            impl.MatchFeatures(modelDescriptors, observedDescriptors, modelKeyPoints, observedKeyPoints, matches);
 
             return watch.ElapsedMilliseconds;
         }
@@ -196,8 +172,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, matches, mask, 1.5, 20);
                 if (nonZeroCount >= 4)
                 {
-                    Mat homography= Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
-                    if(homography == null)
+                    Mat homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
+                    if (homography == null)
                         throw new Exception("Matrix can not be recoverd.");
 
                     return homography;

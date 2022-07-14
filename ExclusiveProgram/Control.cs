@@ -60,7 +60,7 @@ namespace ExclusiveProgram
                 var corrector = new PuzzleCorrector(preProcessImpl, backgroundColor);
 
                 var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr, byte>();
-                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(), corrector);
+                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(), preProcessImpl);
                 recognizer.setListener(new MyRecognizeListener(this));
 
                 factory = new DefaultPuzzleFactory(locator,corrector, recognizer, new PuzzleResultMerger(), preProcessImpl, 5);
@@ -166,76 +166,21 @@ namespace ExclusiveProgram
 
             private readonly Control ui;
 
-            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfPoint vp, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double Slope, double Angle)
+            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime)
             {
                 Mat resultImage = new Mat();
                 Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
                    matches, resultImage, new MCvScalar(0, 0, 255), new MCvScalar(255, 255, 255), mask);
 
-                CvInvoke.PutText(resultImage, string.Format("{0}ms , Slop:{1:0.00} , Angle:{2:0.00}", matchTime, Slope, Angle), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
-
-                resultImage.Save("matching_results\\" + index + ".jpg");
+                resultImage.Save("results\\matching_" + index + ".jpg");
                 resultImage.Dispose();
             }
 
-            public void OnPerspective(Mat observedImage, Mat modelImage, Mat homography, PointF[] kk,double Angle)
+            public void OnPerspective(Image<Bgr, byte> warpedPerspectiveImage,String position)
             {
-                var perspective_image = new Mat(observedImage.Size, observedImage.Depth, 3);
-                CvInvoke.WarpPerspective(modelImage, perspective_image, homography, observedImage.Size);
-                observedImage.Save("perspective_results\\R" + index + ".jpg");
-                perspective_image.Save("perspective_results\\P" + index + ".jpg");
-                /*
-                Mat inv_homography=homography.Clone();
-                CvInvoke.Invert(inv_homography, inv_homography,DecompMethod.Svd);
-                var inv_perspective_image = new Mat(modelImage.Size, modelImage.Depth,3);
-                CvInvoke.WarpPerspective(observedImage, inv_perspective_image, inv_homography, modelImage.Size);
-                inv_perspective_image.Save("perspective_results\\G"+ index + ".jpg");
-                */
-
-
-
-                Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
-
-                PointF[] points_on_modelImage = new PointF[]
-                {
-                      new PointF(rect.Left, rect.Bottom),
-                      new PointF(rect.Right, rect.Bottom),
-                      new PointF(rect.Right, rect.Top),
-                      new PointF(rect.Left, rect.Top)
-                };
-
-                var perspective_pts = CvInvoke.PerspectiveTransform(points_on_modelImage, homography);
-
-                var p = modelImage.Clone();
-
-                Point[] points = Array.ConvertAll<PointF, Point>(perspective_pts, Point.Round);
-
-
-                int x_P = (int)Math.Abs(perspective_pts[2].X + perspective_pts[3].X) / 2;
-                int y_P = (int)Math.Abs(perspective_pts[0].Y + perspective_pts[3].Y) / 2;
-
-                if (Math.Abs(Angle) == 90)
-                {
-                    x_P = (int)Math.Abs(perspective_pts[3].X + perspective_pts[0].X) / 2;
-                    y_P = (int)Math.Abs(perspective_pts[1].Y + perspective_pts[0].Y) / 2;
-                }
-
-                int x = (int)x_P / (modelImage.Width / 7);
-                int y = (int)y_P / (modelImage.Height / 5);
-
-                if (x >= 7)
-                { x = 6; }
-                if (y >= 5)
-                { y = 4; }
-
-                var a=y.ToString() + x.ToString();
-                CvInvoke.PutText(p,a, new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
-                p.Save("perspective_results\\A" + index + ".jpg");
-
-            }
-
-            public void OnCorrected(Image<Bgr, byte> image)
-            {
+                CvInvoke.PutText(warpedPerspectiveImage, string.Format("position: {0}", position), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
+                warpedPerspectiveImage.Save("results\\perspective_"+index+".jpg");
+                index++;
             }
         }
 

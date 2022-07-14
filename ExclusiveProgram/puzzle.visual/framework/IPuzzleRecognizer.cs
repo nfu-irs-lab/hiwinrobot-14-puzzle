@@ -30,9 +30,8 @@ namespace ExclusiveProgram.puzzle.visual.framework
 
     public interface PuzzleRecognizerListener
     {
-        void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfPoint vp, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double Slope, double angle);
-        void OnCorrected(Image<Bgr, byte> image);
-        void OnPerspective(Mat observedImage, Mat modelImage, Mat homography, PointF[] perspective_pts, double Angle);
+        void OnMatched(Image<Bgr, byte> preprocessModelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime);
+        void OnPerspective(Image<Bgr, byte> warpedPerspectiveImage, string position);
     }
 
     public interface PuzzleRecognizerImpl
