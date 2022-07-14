@@ -35,7 +35,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //ROI設定，須為→(中心-(邊長/2))，為了將圖片放到中央
             new_img.ROI = new Rectangle(new Point(((int)Lenght - Rotate_newImg_x) / 2, ((int)Lenght - Rotate_newImg_y) / 2), new Size(Rotate_newImg_x, Rotate_newImg_y));
 
-
             //將圖片複製到圖片中央
             ROI.CopyTo(new_img);
 
@@ -45,9 +44,10 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //將圖片旋轉(矯正[rectify]用)，旋轉出邊界顏色使用ROI_HSV值轉RGB(後續處理方便)
             new_img = new_img.Rotate(Angle, backgroundColor);
 
-            Image<Gray, byte> Out = new Image<Gray, byte>(new_img.Size);
             Image<Bgr, byte> stage1= new Image<Bgr, byte>(new_img.Size);
             thresholdImpl.Preprocess(new_img, stage1);
+
+            Image<Gray, byte> Out = new Image<Gray, byte>(stage1.Size);
             thresholdImpl.ConvertToGray(stage1, Out);
             thresholdImpl.Threshold(Out, Out);
 
