@@ -60,7 +60,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     if (listener != null)
                         listener.onRecognized(recognized_result);
 
-                    results.Add(merger.merge(location, location.ROI, recognized_result));
+                    results.Add(merger.merge(location,location.ROI, recognized_result));
                 },cts.Token);
                 task.Wait();
                 tasks.Add(task);

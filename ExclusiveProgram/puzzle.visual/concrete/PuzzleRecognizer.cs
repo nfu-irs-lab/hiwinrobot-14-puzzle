@@ -22,17 +22,23 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private Image<Bgr, byte> preprocessModelImage = null;
         private readonly PuzzleRecognizerImpl impl;
         private readonly IPuzzlePreProcessImpl puzzlePreProcessImpl;
+        private readonly IPuzzleGrayConversionImpl grayConversionImpl;
+        private readonly IPuzzleThresholdImpl thresholdImpl;
+        private readonly IPuzzleBinaryPreprocessImpl binaryPreprocessImpl;
         private readonly Image<Bgr, byte> modelImage;
         private readonly double uniquenessThreshold;
         private PuzzleRecognizerListener listener;
 
 
-        public PuzzleRecognizer(Image<Bgr, byte> modelImage, double uniquenessThreshold, PuzzleRecognizerImpl impl, IPuzzlePreProcessImpl puzzlePreProcessImpl)
+        public PuzzleRecognizer(Image<Bgr, byte> modelImage, double uniquenessThreshold, PuzzleRecognizerImpl impl, IPuzzlePreProcessImpl puzzlePreProcessImpl,IPuzzleGrayConversionImpl grayConversionImpl,IPuzzleThresholdImpl thresholdImpl,IPuzzleBinaryPreprocessImpl binaryPreprocessImpl)
         {
             this.modelImage = modelImage;
             this.uniquenessThreshold = uniquenessThreshold;
             this.impl = impl;
             this.puzzlePreProcessImpl = puzzlePreProcessImpl;
+            this.grayConversionImpl = grayConversionImpl;
+            this.thresholdImpl = thresholdImpl;
+            this.binaryPreprocessImpl = binaryPreprocessImpl;
         }
 
         public void PreprocessModelImage()
@@ -74,8 +80,14 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
                 Mat invert_homography = homography.Clone();
                 CvInvoke.Invert(invert_homography, invert_homography, DecompMethod.Svd);
-                var invert_perspectiveImage = new Mat(preprocessModelImage.Size, preprocessModelImage.Mat.Depth, 3);
-                CvInvoke.WarpPerspective(observedImage, invert_perspectiveImage, invert_homography, preprocessModelImage.Size);
+                var warpImage= new Mat(preprocessModelImage.Size, preprocessModelImage.Mat.Depth, 3);
+                CvInvoke.WarpPerspective(observedImage, warpImage, invert_homography, preprocessModelImage.Size);
+
+                Point point = FindPositionOnModelImage(warpImage.ToImage<Bgr,byte>());
+
+                var preview_image = warpImage.Clone();
+
+
 
                 Rectangle rect = new Rectangle(Point.Empty, observedImage.Size);
 
@@ -95,20 +107,31 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
                 var point_on_modelImage = CvInvoke.PerspectiveTransform(points_on_observedImage, invert_homography);
                 Point[] points = Array.ConvertAll<PointF, Point>(point_on_modelImage, Point.Round);
-                int x_P = (int)Math.Abs(point_on_modelImage[2].X + point_on_modelImage[3].X) / 2;
-                int y_P = (int)Math.Abs(point_on_modelImage[0].Y + point_on_modelImage[3].Y) / 2;
 
-                /*
-                if (Math.Abs(result.Angle)>=90)
+                CvInvoke.Polylines(preview_image,points,true,new MCvScalar(0,0,255));
+
+
+
+                CvInvoke.Circle(preview_image,point,3, new MCvScalar(0, 0, 255), 2);
+
+                var width_per_puzzle  = (modelImage.Width / 7.0f);
+                var height_per_puzzle = (modelImage.Height / 5.0f);
+                for (int i = 1; i <= 5; i++)
                 {
-                    x_P = (int)Math.Abs(point_on_modelImage[3].X + point_on_modelImage[0].X) / 2;
-                    y_P = (int)Math.Abs(point_on_modelImage[1].Y + point_on_modelImage[0].Y) / 2;
+                    var point1 = new Point(0,(int)height_per_puzzle*i);
+                    var point2 = new Point(preview_image.Width-1,(int)width_per_puzzle*i);
+                    CvInvoke.Line(preview_image, point1, point2, new MCvScalar(0, 0, 255), 2);
                 }
-                */
 
+                for (int j = 1; j <= 7; j++)
+                {
+                    var point1 = new Point((int)width_per_puzzle*j,0);
+                    var point2 = new Point((int)width_per_puzzle*j,preview_image.Height-1);
+                    CvInvoke.Line(preview_image, point1, point2, new MCvScalar(0, 0, 255), 2);
+                }
 
-                int x = (int)x_P / (modelImage.Width / 7);
-                int y = (int)y_P / (modelImage.Height / 5);
+                int x = (int)point.X/ (modelImage.Width / 7);
+                int y = (int)point.Y / (modelImage.Height / 5);
 
                 if (x >= 7)
                     x = 6;
@@ -118,11 +141,57 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 result.position = y + "" + x.ToString();
 
                 if (listener != null)
-                    listener.OnPerspective(invert_perspectiveImage.ToImage<Bgr,byte>(), result.position);
+                    listener.OnPerspective(preview_image.ToImage<Bgr,byte>(), result.position);
             }
             return result;
         }
 
+        private Point FindPositionOnModelImage(Image<Bgr,byte> warpImage)
+        {
+            var binaryImage = new Image<Gray, byte>(warpImage.Size);
+            grayConversionImpl.ConvertToGray(warpImage,binaryImage);
+            thresholdImpl.Threshold(binaryImage, binaryImage);
+            binaryPreprocessImpl.BinaryPreprocess(binaryImage, binaryImage);
+
+
+            //取得輪廓組套件
+            VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
+            CvInvoke.FindContours(binaryImage, contours, null, RetrType.External, ChainApproxMethod.ChainApproxSimple);
+                
+            var resultRectangle=new Rectangle();
+            int max=-1;
+            //尋遍輪廓組之單一輪廓
+            for (int i = 0; i < contours.Size; i++)
+            {
+                VectorOfPoint contour = contours[i];
+                //多邊形逼近之套件
+                VectorOfPoint approxContour = new VectorOfPoint();
+
+                //將輪廓組用多邊形框選 「0.05」為可更改逼近值
+                CvInvoke.ApproxPolyDP(contour, approxContour, CvInvoke.ArcLength(contour, true) * 0.005, true);
+
+                //畫出最小框選矩形，裁切用
+                Rectangle BoundingBox_ = CvInvoke.BoundingRectangle(approxContour);
+                //Rectangle BoundingBox_ = CvInvoke.BoundingRectangle(contour);
+
+                int current = BoundingBox_.Width * BoundingBox_.Height;
+                if (current >= max)
+                {
+                    resultRectangle=BoundingBox_;
+                    max= current;
+                }
+
+            }
+
+            //畫在圖片上
+            CvInvoke.Rectangle(binaryImage, resultRectangle, new MCvScalar(255, 0, 0), 2);
+
+            binaryImage.Save("results\\G.jpg");
+
+            int x_central = (resultRectangle.Left + resultRectangle.Right)/2;
+            int y_central = (resultRectangle.Top+ resultRectangle.Bottom)/2;
+            return new Point(x_central,y_central);
+        }
 
         //四捨五入至想要位數
         private static double Round(double value, int d)

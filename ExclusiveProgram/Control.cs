@@ -65,7 +65,7 @@ namespace ExclusiveProgram
                 corrector.setListener(new MyCorrectorListener());
 
                 var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr, byte>();
-                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),preprocessImpl);
+                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),preprocessImpl,grayConversionImpl,thresoldImpl,binaryPreprocessImpl);
                 recognizer.setListener(new MyRecognizeListener(this));
 
                 factory = new DefaultPuzzleFactory(locator,corrector, recognizer, new PuzzleResultMerger(),5);

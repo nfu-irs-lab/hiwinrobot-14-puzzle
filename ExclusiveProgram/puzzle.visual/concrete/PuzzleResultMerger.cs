@@ -20,7 +20,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             Puzzle_sturct register = new Puzzle_sturct();
             register.coordinate = locationResult.Coordinate;
             register.position = recognizeResult.position;
-            register.Angel = recognizeResult.Angle;
+            register.Angel = recognizeResult.Angle+locationResult.Angle;
             register.image = correctedImage;
 
             //register.puzzle_region = Puzzle[i].puzzle_region;
