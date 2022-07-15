@@ -18,6 +18,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public Size Size;
         public Image<Bgr,byte> ROI;
         public Image<Gray,byte> BinaryROI;
+        public int id;
     }
 
     public interface IPuzzleLocator

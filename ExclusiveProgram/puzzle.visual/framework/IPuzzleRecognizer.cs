@@ -18,6 +18,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
     {
         public double Angle;
         public string position;
+        public int id;
     };
 
     public struct Puzzle_sturct
@@ -26,12 +27,13 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public Point coordinate;
         public Image<Bgr,byte> image;
         public string position;
+        public int id;
     };
 
     public interface PuzzleRecognizerListener
     {
-        void OnMatched(Image<Bgr, byte> preprocessModelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime);
-        void OnPerspective(Image<Bgr, byte> warpedPerspectiveImage, string position);
+        void OnMatched(int id,Image<Bgr, byte> preprocessModelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime);
+        void OnPerspective(int id,Image<Bgr, byte> warpedPerspectiveImage, string position);
     }
 
     public interface PuzzleRecognizerImpl
@@ -44,7 +46,7 @@ namespace ExclusiveProgram.puzzle.visual.framework
     {
         bool ModelImagePreprocessIsDone();
         void PreprocessModelImage();
-        RecognizeResult Recognize(Image<Bgr,byte> image);
+        RecognizeResult Recognize(int id,Image<Bgr,byte> image);
         void setListener(PuzzleRecognizerListener listener);
     }
 

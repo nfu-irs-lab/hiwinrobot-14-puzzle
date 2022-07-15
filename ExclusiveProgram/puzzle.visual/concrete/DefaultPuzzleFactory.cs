@@ -50,7 +50,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             {
                 Task task = factory.StartNew(() =>
                 {
-                    var recognized_result = recognizer.Recognize(location.ROI);
+                    var recognized_result = recognizer.Recognize(location.id,location.ROI);
                     if (listener != null)
                         listener.onRecognized(recognized_result);
 

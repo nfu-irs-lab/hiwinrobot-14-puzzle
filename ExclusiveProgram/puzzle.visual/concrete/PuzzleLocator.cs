@@ -52,6 +52,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             var preview_image = rawImage.Clone();
 
+            int valid_id = 0;
             //尋遍輪廓組之單一輪廓
             for (int i = 0; i < contours.Size; i++)
             {
@@ -89,6 +90,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 Point Position = getCentralPosition(puzzleData.Angle, contour);
                 if (CheckDuplicatePuzzlePosition(puzzleDataList, Position) && CheckSize(rect, Position))
                 {
+                    puzzleData.id = valid_id++;
                     puzzleData.Angle = getAngle(BoundingBox,rect);
                     puzzleData.Coordinate = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);

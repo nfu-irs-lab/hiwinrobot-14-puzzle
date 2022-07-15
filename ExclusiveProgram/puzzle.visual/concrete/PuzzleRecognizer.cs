@@ -53,12 +53,10 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             return preprocessModelImage != null;
         }
 
-        public RecognizeResult Recognize(Image<Bgr, byte> image)
+        public RecognizeResult Recognize(int id,Image<Bgr, byte> image)
         {
             Image<Bgr, byte> observedImage = image.Clone();
-
-            VisualSystem.ExtendColor(observedImage, observedImage);
-            //VisualSystem.WhiteBalance(observedImage,observedImage);
+            //puzzlePreProcessImpl.Preprocess(observedImage,observedImage);
 
             long matchTime;
 
@@ -72,7 +70,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 MatchFeaturePointsAndFindMask(observedImage.Mat, preprocessModelImage.Mat, out modelKeyPoints, out observedKeyPoints, matches, out mask, out matchTime);
 
                 if (listener != null)
-                    listener.OnMatched(preprocessModelImage, modelKeyPoints, observedImage, observedKeyPoints, matches, mask, matchTime);
+                    listener.OnMatched(id,preprocessModelImage, modelKeyPoints, observedImage, observedKeyPoints, matches, mask, matchTime);
 
                 Mat homography = FindHomography(modelKeyPoints, observedKeyPoints, matches, mask);
 
@@ -83,7 +81,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 var warpImage= new Mat(preprocessModelImage.Size, preprocessModelImage.Mat.Depth, 3);
                 CvInvoke.WarpPerspective(observedImage, warpImage, invert_homography, preprocessModelImage.Size);
 
-                Point point = FindPositionOnModelImage(warpImage.ToImage<Bgr,byte>());
+                Point point = FindPositionOnModelImage(id,warpImage.ToImage<Bgr,byte>());
 
                 var preview_image = warpImage.Clone();
 
@@ -141,12 +139,12 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 result.position = y + "" + x.ToString();
 
                 if (listener != null)
-                    listener.OnPerspective(preview_image.ToImage<Bgr,byte>(), result.position);
+                    listener.OnPerspective(id,preview_image.ToImage<Bgr,byte>(), result.position);
             }
             return result;
         }
 
-        private Point FindPositionOnModelImage(Image<Bgr,byte> warpImage)
+        private Point FindPositionOnModelImage(int id,Image<Bgr,byte> warpImage)
         {
             var binaryImage = new Image<Gray, byte>(warpImage.Size);
             grayConversionImpl.ConvertToGray(warpImage,binaryImage);
@@ -186,7 +184,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             //畫在圖片上
             CvInvoke.Rectangle(binaryImage, resultRectangle, new MCvScalar(255, 0, 0), 2);
 
-            binaryImage.Save("results\\G.jpg");
+            binaryImage.Save("results\\G"+id+".jpg");
 
             int x_central = (resultRectangle.Left + resultRectangle.Right)/2;
             int y_central = (resultRectangle.Top+ resultRectangle.Bottom)/2;
