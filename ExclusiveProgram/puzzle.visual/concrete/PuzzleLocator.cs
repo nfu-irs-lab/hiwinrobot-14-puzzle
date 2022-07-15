@@ -2,6 +2,7 @@
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using ExclusiveProgram.puzzle.visual.concrete.locator;
 using ExclusiveProgram.puzzle.visual.framework;
 using ExclusiveProgram.puzzle.visual.framework.utils;
 using System;
@@ -17,16 +18,33 @@ namespace ExclusiveProgram.puzzle.visual.concrete
     {
         private readonly Size minSize;
         private readonly Size maxSize;
+        private readonly IPuzzlePreProcessImpl preProcessImpl;
+        private readonly IPuzzleGrayConversionImpl grayConversionImpl;
+        private readonly IPuzzleThresholdImpl thresholdImpl;
+        private readonly NormalBinaryPreprocessImpl binaryPreprocessImpl;
 
-        public PuzzleLocator(Size minSize, Size maxSize)
+        public PuzzleLocator(Size minSize, Size maxSize, IPuzzlePreProcessImpl preProcessImpl, IPuzzleGrayConversionImpl grayConversionImpl, IPuzzleThresholdImpl thresholdImpl, locator.NormalBinaryPreprocessImpl binaryPreprocessImpl)
         {
             this.minSize = minSize;
             this.maxSize = maxSize;
+            this.preProcessImpl = preProcessImpl;
+            this.grayConversionImpl = grayConversionImpl;
+            this.thresholdImpl = thresholdImpl;
+            this.binaryPreprocessImpl = binaryPreprocessImpl;
         }
 
 
-        public List<LocationResult> Locate(Image<Gray, byte> binaryImage,Image<Bgr,byte> rawImage)
+        public List<LocationResult> Locate(Image<Bgr,byte> rawImage)
         {
+            var preprocessImage=rawImage.Clone();
+            if(preProcessImpl!=null)
+                preProcessImpl.Preprocess(preprocessImage,preprocessImage);
+
+            var binaryImage = new Image<Gray, byte>(preprocessImage.Size);
+            grayConversionImpl.ConvertToGray(preprocessImage, binaryImage);
+            thresholdImpl.Threshold(binaryImage,binaryImage);
+            binaryPreprocessImpl.BinaryPreprocess(binaryImage,binaryImage);
+            binaryImage.Save("results\\binary.jpg");
             
             List<LocationResult> puzzleDataList = new List<LocationResult>();
             //取得輪廓組套件
@@ -183,6 +201,5 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
             return Angel;
         }
-
     }
 }

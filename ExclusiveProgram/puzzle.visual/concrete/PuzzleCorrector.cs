@@ -11,14 +11,20 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 {
     public class PuzzleCorrector : IPuzzleCorrector
     {
-        private readonly IPuzzlePreProcessImpl thresholdImpl;
         private readonly Bgr backgroundColor;
         private PuzzleCorrectorListener listener;
+        private readonly IPuzzlePreProcessImpl preProcessImpl;
+        private readonly IPuzzleGrayConversionImpl grayConversionImpl;
+        private readonly IPuzzleThresholdImpl thresholdImpl;
+        private readonly IPuzzleBinaryPreprocessImpl binaryPreprocessImpl;
 
-        public PuzzleCorrector(IPuzzlePreProcessImpl thresholdImpl,Color backgroundColor)
+        public PuzzleCorrector(Color backgroundColor, IPuzzlePreProcessImpl preProcessImpl, locator.NormalPreprocessImpl preprocessImpl, IPuzzleGrayConversionImpl grayConversionImpl, IPuzzleThresholdImpl thresholdImpl,IPuzzleBinaryPreprocessImpl binaryPreprocessImpl)
         {
-            this.thresholdImpl = thresholdImpl;
             this.backgroundColor = new Bgr(backgroundColor);
+            this.preProcessImpl = preProcessImpl;
+            this.grayConversionImpl = grayConversionImpl;
+            this.thresholdImpl = thresholdImpl;
+            this.binaryPreprocessImpl = binaryPreprocessImpl;
         }
         public Image<Bgr, byte> Correct(Image<Bgr, byte> ROI, double Angle)
         {
@@ -45,8 +51,10 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             new_img = new_img.Rotate(Angle, backgroundColor);
 
             Image<Gray, byte> Out = new Image<Gray, byte>(new_img.Size);
-            thresholdImpl.ConvertToGray(new_img, Out);
+
+            grayConversionImpl.ConvertToGray(new_img, Out);
             thresholdImpl.Threshold(Out, Out);
+            binaryPreprocessImpl.BinaryPreprocess(Out, Out);
             
             if (listener != null)
                 listener.onPreprocessDone(Out);

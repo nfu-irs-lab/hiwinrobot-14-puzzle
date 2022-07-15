@@ -12,30 +12,10 @@ using System.Threading.Tasks;
 
 namespace ExclusiveProgram.puzzle.visual.concrete.locator
 {
-    public class NormalPuzzlePreProcessImpl : IPuzzlePreProcessImpl
+    public class NormalBinaryPreprocessImpl : IPuzzleBinaryPreprocessImpl
     {
-        private readonly int threshold;
-
-        public NormalPuzzlePreProcessImpl(int threshold)
+        public void BinaryPreprocess(Image<Gray, byte> input, Image<Gray, byte> output)
         {
-            this.threshold = threshold;
-        }
-
-        public void ConvertToGray(Image<Bgr, byte> input, Image<Gray, byte> output)
-        {
-            CvInvoke.CvtColor(input, output, ColorConversion.Bgr2Gray);
-        }
-
-        public void Preprocess(Image<Bgr, byte> input, Image<Bgr, byte> output)
-        {
-            VisualSystem.WhiteBalance(input,output);
-            VisualSystem.ExtendColor(output,output);
-        }
-
-        public void Threshold(Image<Gray, byte> input, Image<Gray, byte> output)
-        {
-
-            CvInvoke.Threshold(input, output, 255,threshold,ThresholdType.Binary);
             //定義結構元素
             Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
             //Erode:侵蝕，Dilate:擴張

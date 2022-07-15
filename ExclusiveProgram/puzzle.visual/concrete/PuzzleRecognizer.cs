@@ -38,7 +38,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         public void PreprocessModelImage()
         {
             preprocessModelImage = new Image<Bgr, byte>(modelImage.Size);
-            puzzlePreProcessImpl.Preprocess(modelImage,preprocessModelImage);
+            if(puzzlePreProcessImpl!=null)
+                puzzlePreProcessImpl.Preprocess(modelImage,preprocessModelImage);
         }
 
         public bool ModelImagePreprocessIsDone()

@@ -47,22 +47,28 @@ namespace ExclusiveProgram
             var threshold = (int)numericUpDown_blockSize.Value;
             var green_weight = Double.Parse(textBox_param.Text);
 
+            var preprocessImpl = new NormalPreprocessImpl();
+            var grayConversionImpl = new GreenBackgroundGrayConversionImpl(green_weight);
+            var thresoldImpl= new NormalThresoldImpl(threshold);
+            var binaryPreprocessImpl = new NormalBinaryPreprocessImpl();
+
             IPuzzleFactory factory = null;
             try
             {
-                var locator = new PuzzleLocator(minSize, maxSize);
+
+                var locator = new PuzzleLocator(minSize, maxSize,null,grayConversionImpl,thresoldImpl,binaryPreprocessImpl);
                 var uniquenessThreshold = ((double)numericUpDown_uniqueness_threshold.Value) * 0.01f;
 
 
                 Color backgroundColor = getColorFromTextBox();
-                var corrector = new PuzzleCorrector(new CorrectorPuzzlePreProcessImpl(threshold,green_weight), backgroundColor);
+                var corrector = new PuzzleCorrector(backgroundColor,preprocessImpl,preprocessImpl,grayConversionImpl,thresoldImpl,new CorrectorBinaryPreprocessImpl());
                 corrector.setListener(new MyCorrectorListener());
 
                 var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr, byte>();
-                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),new GreenBackgroundPuzzlePreProcessImpl(threshold, green_weight));
+                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),preprocessImpl);
                 recognizer.setListener(new MyRecognizeListener(this));
 
-                factory = new DefaultPuzzleFactory(locator,corrector, recognizer, new PuzzleResultMerger(), new GreenBackgroundPuzzlePreProcessImpl(threshold, green_weight), 5);
+                factory = new DefaultPuzzleFactory(locator,corrector, recognizer, new PuzzleResultMerger(),5);
                 factory.setListener(new MyFactoryListener(this));
             }
             catch (Exception ex)

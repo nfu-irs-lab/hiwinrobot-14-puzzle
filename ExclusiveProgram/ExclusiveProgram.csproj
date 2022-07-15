@@ -129,11 +129,12 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="puzzle.visual\concrete\DefaultPuzzleFactory.cs" />
-    <Compile Include="puzzle.visual\concrete\utils\CorrectorPuzzlePreProcessImpl.cs" />
-    <Compile Include="puzzle.visual\concrete\utils\TPuzzlePreProcessImpl.cs" />
-    <Compile Include="puzzle.visual\concrete\utils\GreenBackgroundPuzzlePreProcessImpl.cs" />
-    <Compile Include="puzzle.visual\concrete\utils\NormalPuzzlePreProcessImpl.cs" />
-    <Compile Include="puzzle.visual\concrete\utils\AdaptivePuzzlePreProcessImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\NormalBinaryPreprocessImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\NormalThresholdImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\CorrectorBinaryPreprocessImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\GreenBackgroundGrayConversionImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\NormalPreprocessImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\utils\AdaptiveThresholdImpl.cs" />
     <Compile Include="puzzle.visual\concrete\SiftFlannPuzzleRecognizerImpl.cs" />
     <Compile Include="puzzle.visual\concrete\SiftBfmPuzzleRecognizerImpl.cs" />
     <Compile Include="puzzle.visual\concrete\PuzzleCorrector.cs" />

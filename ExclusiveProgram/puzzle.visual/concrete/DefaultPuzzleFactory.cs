@@ -15,18 +15,16 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         private IPuzzleLocator locator;
         private readonly IPuzzleCorrector corrector;
         private readonly IPuzzleResultMerger merger;
-        private readonly IPuzzlePreProcessImpl preProcessImpl;
         private PuzzleFactoryListener listener;
         private readonly TaskFactory factory;
         private readonly CancellationTokenSource cts;
 
-        public DefaultPuzzleFactory(IPuzzleLocator locator,IPuzzleCorrector corrector, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,IPuzzlePreProcessImpl preProcessImpl,int threadCount)
+        public DefaultPuzzleFactory(IPuzzleLocator locator,IPuzzleCorrector corrector, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,int threadCount)
         {
             this.recognizer = recognizer;
             this.locator = locator;
             this.corrector = corrector;
             this.merger = merger;
-            this.preProcessImpl = preProcessImpl;
 
             // Create a scheduler that uses two threads.
             LimitedConcurrencyLevelTaskScheduler lcts = new LimitedConcurrencyLevelTaskScheduler(threadCount);
@@ -41,15 +39,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             if (!recognizer.ModelImagePreprocessIsDone())
                 recognizer.PreprocessModelImage();
 
-            Image<Bgr, byte> stage1= new Image<Bgr, byte>(input.Size);
-            Image<Gray, byte> stage2= new Image<Gray, byte>(input.Size);
-            preProcessImpl.Preprocess(input,stage1);
-            preProcessImpl.ConvertToGray(stage1,stage2);
-            preProcessImpl.Threshold(stage2,stage2);
-            if (listener != null)
-                listener.onPreprocessDone(stage2);
-
-            List<LocationResult> dataList = locator.Locate(stage2,input);
+            List<LocationResult> dataList = locator.Locate(input);
             if (listener != null)
                 listener.onLocated(dataList);
 
@@ -77,8 +67,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             }
 
             //Task.WaitAll(tasks.ToArray());
-            stage1.Dispose();
-            stage2.Dispose();
             cts.Dispose();
             return results;
         }
