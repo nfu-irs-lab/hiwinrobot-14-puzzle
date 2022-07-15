@@ -13,17 +13,15 @@ namespace ExclusiveProgram.puzzle.visual.concrete
     {
         private IPuzzleRecognizer recognizer;
         private IPuzzleLocator locator;
-        private readonly IPuzzleCorrector corrector;
         private readonly IPuzzleResultMerger merger;
         private PuzzleFactoryListener listener;
         private readonly TaskFactory factory;
         private readonly CancellationTokenSource cts;
 
-        public DefaultPuzzleFactory(IPuzzleLocator locator,IPuzzleCorrector corrector, IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,int threadCount)
+        public DefaultPuzzleFactory(IPuzzleLocator locator,IPuzzleRecognizer recognizer, IPuzzleResultMerger merger,int threadCount)
         {
             this.recognizer = recognizer;
             this.locator = locator;
-            this.corrector = corrector;
             this.merger = merger;
 
             // Create a scheduler that uses two threads.
@@ -52,10 +50,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             {
                 Task task = factory.StartNew(() =>
                 {
-                    var corrected = corrector.Correct(location.ROI, location.Angle);
-                    if(listener!=null)
-                        listener.onCorrected(corrected);
-
                     var recognized_result = recognizer.Recognize(location.ROI);
                     if (listener != null)
                         listener.onRecognized(recognized_result);

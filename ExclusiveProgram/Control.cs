@@ -61,14 +61,12 @@ namespace ExclusiveProgram
 
 
                 Color backgroundColor = getColorFromTextBox();
-                var corrector = new PuzzleCorrector(backgroundColor,preprocessImpl,preprocessImpl,grayConversionImpl,thresoldImpl,new CorrectorBinaryPreprocessImpl());
-                corrector.setListener(new MyCorrectorListener());
 
                 var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr, byte>();
-                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),preprocessImpl,grayConversionImpl,thresoldImpl,binaryPreprocessImpl);
+                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),preprocessImpl,grayConversionImpl,thresoldImpl,new CorrectorBinaryPreprocessImpl());
                 recognizer.setListener(new MyRecognizeListener(this));
 
-                factory = new DefaultPuzzleFactory(locator,corrector, recognizer, new PuzzleResultMerger(),5);
+                factory = new DefaultPuzzleFactory(locator,recognizer, new PuzzleResultMerger(),5);
                 factory.setListener(new MyFactoryListener(this));
             }
             catch (Exception ex)
