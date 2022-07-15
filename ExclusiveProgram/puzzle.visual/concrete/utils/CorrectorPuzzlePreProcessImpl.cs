@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 
 namespace ExclusiveProgram.puzzle.visual.concrete.locator
 {
-    public class GreenBackgroundPuzzlePreProcessImpl : IPuzzlePreProcessImpl
+    public class CorrectorPuzzlePreProcessImpl : IPuzzlePreProcessImpl
     {
         private readonly int threshold;
         private readonly double green_weight;
         private readonly double red_weight;
         private readonly double blue_weight;
 
-        public GreenBackgroundPuzzlePreProcessImpl(int threshold,double green_weight)
+        public CorrectorPuzzlePreProcessImpl (int threshold,double green_weight)
         {
             this.threshold = threshold;
             this.green_weight = green_weight;
@@ -45,7 +45,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete.locator
                 }
             }
             //定義結構元素
-            Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
+            Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(5, 5), new Point(-1, -1));
             //Erode:侵蝕，Dilate:擴張
             CvInvoke.Dilate(output,output,Struct_element,new Point(1, 1), 6, BorderType.Default, new MCvScalar(0, 0, 0));
             CvInvoke.Erode(output,output,Struct_element,new Point(-1, -1), 3, BorderType.Default, new MCvScalar(0, 0, 0));

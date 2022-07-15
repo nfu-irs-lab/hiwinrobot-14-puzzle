@@ -31,11 +31,16 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             List<LocationResult> puzzleDataList = new List<LocationResult>();
             //取得輪廓組套件
             VectorOfVectorOfPoint contours = findContours(binaryImage);
+
+            var preview_image = rawImage.Clone();
+
             //尋遍輪廓組之單一輪廓
             for (int i = 0; i < contours.Size; i++)
             {
                 //尋找單一輪廓之套件
                 VectorOfPoint contour = contours[i];
+
+                CvInvoke.Polylines(preview_image, contour, true, new MCvScalar(0, 0, 255),2);
 
                 //多邊形逼近之套件
                 VectorOfPoint approxContour = new VectorOfPoint();
@@ -48,7 +53,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 //Rectangle BoundingBox_ = CvInvoke.BoundingRectangle(contour);
 
                 //畫在圖片上
-                //CvInvoke.Rectangle(Ori_img, BoundingBox_, new MCvScalar(255, 0, 255, 255), 2);
+                CvInvoke.Rectangle(preview_image, BoundingBox_, new MCvScalar(255, 0, 0), 2);
+
 
                 //框選輪廓最小矩形
                 Rectangle rect = CvInvoke.BoundingRectangle(contour);
@@ -57,12 +63,15 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 //獲得最小旋轉矩形，取得角度用
                 RotatedRect BoundingBox = CvInvoke.MinAreaRect(contour);
 
+                Point[] points = Array.ConvertAll<PointF, Point>(BoundingBox.GetVertices(), Point.Round);
+                CvInvoke.Polylines(preview_image, points, true, new MCvScalar(0, 255, 255),2);
+
                 LocationResult puzzleData = new LocationResult();
 
                 Point Position = getCentralPosition(puzzleData.Angle, contour);
                 if (CheckDuplicatePuzzlePosition(puzzleDataList, Position) && CheckSize(rect, Position))
                 {
-                    puzzleData.Angle = getAngle(BoundingBox, BoundingBox_, rect);
+                    puzzleData.Angle = getAngle(BoundingBox,rect);
                     puzzleData.Coordinate = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);
                     puzzleData.ROI = getROI(puzzleData.Coordinate,puzzleData.Size,rawImage);
@@ -71,6 +80,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 }
 
             }
+            preview_image.Save("results\\contours.jpg");
+            preview_image.Dispose();
 
             return puzzleDataList;
         }
@@ -145,18 +156,21 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         }
 
         #endregion 檢查重複項
-        private float getAngle(RotatedRect BoundingBox, Rectangle BoundingBox_, Rectangle rect)
+        private float getAngle(RotatedRect BoundingBox, Rectangle rect)
         {
+            //計算角度
+            //詳情請詢問我
 
-            float Angel = 0;
             ////畫出最小矩形
             //CvInvoke.Rectangle(Ori_img, rect, new MCvScalar(0, 0, 255));
 
             //畫出可旋轉矩形
             //CvInvoke.Polylines(Ori_img, Array.ConvertAll(BoundingBox.GetVertices(), Point.Round), true, new Bgr(Color.DeepPink).MCvScalar, 3);
 
-            //計算角度
-            //詳情請詢問我
+
+            //return BoundingBox.Angle;
+            
+            float Angel = 0;
             if (rect.Size.Width < rect.Size.Height)
             {
                 Angel = -(BoundingBox.Angle + 90);

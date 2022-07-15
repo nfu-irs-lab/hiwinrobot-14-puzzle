@@ -44,26 +44,25 @@ namespace ExclusiveProgram
 
             var minSize = new Size((int)min_width_numeric.Value, (int)min_height_numeric.Value);
             var maxSize = new Size((int)max_width_numeric.Value, (int)max_height_numeric.Value);
-            var blockSize = (int)numericUpDown_blockSize.Value;
-            var param1 = Double.Parse(textBox_param.Text);
+            var threshold = (int)numericUpDown_blockSize.Value;
+            var green_weight = Double.Parse(textBox_param.Text);
 
             IPuzzleFactory factory = null;
             try
             {
-                var preProcessImpl = new GreenBackgroundPuzzlePreProcessImpl(blockSize, param1);
-
                 var locator = new PuzzleLocator(minSize, maxSize);
                 var uniquenessThreshold = ((double)numericUpDown_uniqueness_threshold.Value) * 0.01f;
 
 
                 Color backgroundColor = getColorFromTextBox();
-                var corrector = new PuzzleCorrector(preProcessImpl, backgroundColor);
+                var corrector = new PuzzleCorrector(new CorrectorPuzzlePreProcessImpl(threshold,green_weight), backgroundColor);
+                corrector.setListener(new MyCorrectorListener());
 
                 var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr, byte>();
-                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(), preProcessImpl);
+                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),new GreenBackgroundPuzzlePreProcessImpl(threshold, green_weight));
                 recognizer.setListener(new MyRecognizeListener(this));
 
-                factory = new DefaultPuzzleFactory(locator,corrector, recognizer, new PuzzleResultMerger(), preProcessImpl, 5);
+                factory = new DefaultPuzzleFactory(locator,corrector, recognizer, new PuzzleResultMerger(), new GreenBackgroundPuzzlePreProcessImpl(threshold, green_weight), 5);
                 factory.setListener(new MyFactoryListener(this));
             }
             catch (Exception ex)
@@ -71,8 +70,6 @@ namespace ExclusiveProgram
                 MessageBox.Show(ex.Message, "辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            try
-            {
                 var image = CvInvoke.Imread(file_path.Text).ToImage<Bgr, byte>();
                 capture_preview.Image = image.ToBitmap();
                 List<Puzzle_sturct> results = factory.Execute(image);
@@ -82,11 +79,6 @@ namespace ExclusiveProgram
                     ShowResult(result);
                 }
 
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         private void ShowResult(Puzzle_sturct result)
@@ -154,7 +146,14 @@ namespace ExclusiveProgram
 
         }
 
-
+        private class MyCorrectorListener : PuzzleCorrectorListener
+        {
+            int index = 0;
+            public void onPreprocessDone(Image<Gray, byte> result)
+            {
+                result.Save("results\\" + index++ + ".jpg");
+            }
+        }
 
         private class MyRecognizeListener : PuzzleRecognizerListener
         {
@@ -189,6 +188,7 @@ namespace ExclusiveProgram
             private delegate void DelonLocated(List<LocationResult> results);
             private delegate void DelOnCorrected(Image<Bgr, byte> result);
             private delegate void DelonPreprocessDone(Image<Gray, byte> result);
+            private int index;
             public MyFactoryListener(Control ui)
             {
                 this.ui = ui;
@@ -223,7 +223,7 @@ namespace ExclusiveProgram
                     {
                         var control = new UserControl1();
                         control.setImage(result.ROI.ToBitmap());
-                        control.setLabel(result.Size.ToString(), result.Coordinate.ToString());
+                        control.setLabel(String.Format("[{0},{1}] ({2},{3})",result.Coordinate.X,result.Coordinate.Y,result.Size.Width,result.Size.Height),"Angle:"+Math.Round(result.Angle,2));
                         ui.corrector_ROI_puzzleView.Controls.Add(control);
                     }
                 }
@@ -248,6 +248,7 @@ namespace ExclusiveProgram
                     control.setImage(result.ToBitmap());
                     control.setLabel("", "");
                     this.ui.corrector_result_puzzleView.Controls.Add(control);
+                    result.Save("results\\SS" + index++ + ".jpg");
                 }
             }
         }

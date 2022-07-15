@@ -62,11 +62,9 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             {
                 Task task = factory.StartNew(() =>
                 {
-                    /*
                     var corrected = corrector.Correct(location.ROI, location.Angle);
                     if(listener!=null)
                         listener.onCorrected(corrected);
-                    */
 
                     var recognized_result = recognizer.Recognize(location.ROI);
                     if (listener != null)

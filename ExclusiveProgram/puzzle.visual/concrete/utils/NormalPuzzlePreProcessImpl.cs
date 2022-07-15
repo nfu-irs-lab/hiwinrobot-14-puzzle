@@ -30,7 +30,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete.locator
         {
             VisualSystem.WhiteBalance(input,output);
             VisualSystem.ExtendColor(output,output);
-            CvInvoke.MedianBlur(output, output, 27);
         }
 
         public void Threshold(Image<Gray, byte> input, Image<Gray, byte> output)
