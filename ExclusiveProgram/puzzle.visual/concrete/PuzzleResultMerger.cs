@@ -21,7 +21,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
             register.id= locationResult.id;
             register.coordinate = locationResult.Coordinate;
             register.position = recognizeResult.position;
-            register.Angel = recognizeResult.Angle+locationResult.Angle;
+            register.Angel = recognizeResult.Angle;
             register.image = correctedImage;
 
             //register.puzzle_region = Puzzle[i].puzzle_region;
