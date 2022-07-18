@@ -17,8 +17,8 @@ namespace ExclusiveProgram.puzzle.visual.framework
     public struct RecognizeResult
     {
         public double Angle;
-        public PointF[] pts;
         public string position;
+        public int id;
     };
 
     public struct Puzzle_sturct
@@ -27,22 +27,26 @@ namespace ExclusiveProgram.puzzle.visual.framework
         public Point coordinate;
         public Image<Bgr,byte> image;
         public string position;
+        public int id;
     };
 
     public interface PuzzleRecognizerListener
     {
-        void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double slope);
+        void OnMatched(int id,Image<Bgr, byte> preprocessModelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime);
+        void OnPerspective(int id,Image<Bgr, byte> warpedPerspectiveImage, string position);
     }
 
     public interface PuzzleRecognizerImpl
     {
         void DetectFeatures(Mat image, object p, VectorOfKeyPoint keyPoints, Mat descriptors, bool v);
-        void MatchFeatures(Mat modelDescriptors, Mat observedDescriptors, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score);
+        void MatchFeatures(Mat modelDescriptors, Mat observedDescriptors, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches);
     }
 
     public interface IPuzzleRecognizer
     {
-        RecognizeResult Recognize(Image<Bgr,byte> image);
+        bool ModelImagePreprocessIsDone();
+        void PreprocessModelImage();
+        RecognizeResult Recognize(int id,Image<Bgr,byte> image);
         void setListener(PuzzleRecognizerListener listener);
     }
 

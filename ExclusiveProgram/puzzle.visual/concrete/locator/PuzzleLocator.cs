@@ -2,7 +2,9 @@
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using ExclusiveProgram.puzzle.visual.concrete.locator;
 using ExclusiveProgram.puzzle.visual.framework;
+using ExclusiveProgram.puzzle.visual.framework.utils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,47 +16,50 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 {
     public class PuzzleLocator : IPuzzleLocator
     {
-
-        private Mat[] Template_Puzzle = new Mat[35];
-
-        //是否獲得HSV、ROI區域與是否開燈
-        private bool GetWholePuzzle = false;
-        private PuzzleLocatorListener listener;
         private readonly Size minSize;
         private readonly Size maxSize;
-        private readonly int threshold;
+        private readonly IPuzzlePreProcessImpl preProcessImpl;
+        private readonly IPuzzleGrayConversionImpl grayConversionImpl;
+        private readonly IPuzzleThresholdImpl thresholdImpl;
+        private readonly NormalBinaryPreprocessImpl binaryPreprocessImpl;
 
-        public PuzzleLocator(int threshold,Size minSize, Size maxSize)
+        public PuzzleLocator(Size minSize, Size maxSize, IPuzzlePreProcessImpl preProcessImpl, IPuzzleGrayConversionImpl grayConversionImpl, IPuzzleThresholdImpl thresholdImpl, locator.NormalBinaryPreprocessImpl binaryPreprocessImpl)
         {
             this.minSize = minSize;
             this.maxSize = maxSize;
-            this.threshold = threshold;
+            this.preProcessImpl = preProcessImpl;
+            this.grayConversionImpl = grayConversionImpl;
+            this.thresholdImpl = thresholdImpl;
+            this.binaryPreprocessImpl = binaryPreprocessImpl;
         }
 
 
-        public List<LocationResult> Locate(Image<Bgr, byte> input)
+        public List<LocationResult> Locate(Image<Bgr,byte> rawImage)
         {
-            var dst = ColorImagePreprocess(input);
-            var bin = BinaryImagePreprocess(dst);
+            var preprocessImage=rawImage.Clone();
+            if(preProcessImpl!=null)
+                preProcessImpl.Preprocess(preprocessImage,preprocessImage);
 
-            //定義結構元素
-            Mat Struct_element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(-1, -1));
-            //Erode:侵蝕，Dilate:擴張
-            CvInvoke.Dilate(bin, bin, Struct_element, new Point(1, 1), 6, BorderType.Default, new MCvScalar(0, 0, 0));
-            CvInvoke.Erode(bin, bin, Struct_element, new Point(-1, -1), 3, BorderType.Default, new MCvScalar(0, 0, 0));
-
-            if (listener != null)
-                listener.onPreprocessDone(bin);
-
+            var binaryImage = new Image<Gray, byte>(preprocessImage.Size);
+            grayConversionImpl.ConvertToGray(preprocessImage, binaryImage);
+            thresholdImpl.Threshold(binaryImage,binaryImage);
+            binaryPreprocessImpl.BinaryPreprocess(binaryImage,binaryImage);
+            binaryImage.Save("results\\binary.jpg");
+            
             List<LocationResult> puzzleDataList = new List<LocationResult>();
-
             //取得輪廓組套件
-            VectorOfVectorOfPoint contours = findContours(bin);
+            VectorOfVectorOfPoint contours = findContours(binaryImage);
+
+            var preview_image = rawImage.Clone();
+
+            int valid_id = 0;
             //尋遍輪廓組之單一輪廓
             for (int i = 0; i < contours.Size; i++)
             {
                 //尋找單一輪廓之套件
                 VectorOfPoint contour = contours[i];
+
+                CvInvoke.Polylines(preview_image, contour, true, new MCvScalar(0, 0, 255),2);
 
                 //多邊形逼近之套件
                 VectorOfPoint approxContour = new VectorOfPoint();
@@ -67,7 +72,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 //Rectangle BoundingBox_ = CvInvoke.BoundingRectangle(contour);
 
                 //畫在圖片上
-                //CvInvoke.Rectangle(Ori_img, BoundingBox_, new MCvScalar(255, 0, 255, 255), 2);
+                CvInvoke.Rectangle(preview_image, BoundingBox_, new MCvScalar(255, 0, 0), 2);
+
 
                 //框選輪廓最小矩形
                 Rectangle rect = CvInvoke.BoundingRectangle(contour);
@@ -76,22 +82,43 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 //獲得最小旋轉矩形，取得角度用
                 RotatedRect BoundingBox = CvInvoke.MinAreaRect(contour);
 
+                Point[] points = Array.ConvertAll<PointF, Point>(BoundingBox.GetVertices(), Point.Round);
+                CvInvoke.Polylines(preview_image, points, true, new MCvScalar(0, 255, 255),2);
+
                 LocationResult puzzleData = new LocationResult();
 
                 Point Position = getCentralPosition(puzzleData.Angle, contour);
                 if (CheckDuplicatePuzzlePosition(puzzleDataList, Position) && CheckSize(rect, Position))
                 {
-                    puzzleData.Angle = getAngle(BoundingBox, BoundingBox_, rect);
+                    puzzleData.id = valid_id++;
+                    puzzleData.Angle = getAngle(BoundingBox,rect);
                     puzzleData.Coordinate = Position;
                     puzzleData.Size = new Size(rect.Width, rect.Height);
+                    puzzleData.ROI = getROI(puzzleData.Coordinate,puzzleData.Size,rawImage);
+                    puzzleData.BinaryROI= getBinaryROI(puzzleData.Coordinate,puzzleData.Size,binaryImage);
                     puzzleDataList.Add(puzzleData);
-                    if (listener != null)
-                        listener.onLocated(puzzleData);
                 }
 
             }
+            preview_image.Save("results\\contours.jpg");
+            preview_image.Dispose();
 
             return puzzleDataList;
+        }
+
+        private Image<Bgr,byte> getROI(Point Coordinate,Size Size,Image<Bgr,byte> input)
+        {
+            Rectangle rect = new Rectangle((int)(Coordinate.X - Size.Width / 2.0f), (int)(Coordinate.Y - Size.Height / 2.0f), Size.Width, Size.Height);
+
+            //將ROI選取區域使用Mat型式讀取
+            return new Mat(input.Mat, rect).ToImage<Bgr, byte>();
+        }
+        private Image<Gray,byte> getBinaryROI(Point Coordinate,Size Size,Image<Gray,byte> input)
+        {
+            Rectangle rect = new Rectangle((int)(Coordinate.X - Size.Width / 2.0f), (int)(Coordinate.Y - Size.Height / 2.0f), Size.Width, Size.Height);
+
+            //將ROI選取區域使用Mat型式讀取
+            return new Mat(input.Mat, rect).ToImage<Gray, byte>();
         }
 
         private bool CheckSize(Rectangle rect, Point Position)
@@ -149,18 +176,21 @@ namespace ExclusiveProgram.puzzle.visual.concrete
         }
 
         #endregion 檢查重複項
-        private float getAngle(RotatedRect BoundingBox, Rectangle BoundingBox_, Rectangle rect)
+        private float getAngle(RotatedRect BoundingBox, Rectangle rect)
         {
+            //計算角度
+            //詳情請詢問我
 
-            float Angel = 0;
             ////畫出最小矩形
             //CvInvoke.Rectangle(Ori_img, rect, new MCvScalar(0, 0, 255));
 
             //畫出可旋轉矩形
             //CvInvoke.Polylines(Ori_img, Array.ConvertAll(BoundingBox.GetVertices(), Point.Round), true, new Bgr(Color.DeepPink).MCvScalar, 3);
 
-            //計算角度
-            //詳情請詢問我
+
+            //return BoundingBox.Angle;
+            
+            float Angel = 0;
             if (rect.Size.Width < rect.Size.Height)
             {
                 Angel = -(BoundingBox.Angle + 90);
@@ -172,27 +202,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
 
 
             return Angel;
-        }
-
-        private Image<Bgr,byte> ColorImagePreprocess(Image<Bgr,byte> image)
-        {
-            var dst = new Image<Bgr, byte>(image.Size);
-            VisualSystem.WhiteBalance(image,dst);
-            VisualSystem.ExtendColor(dst,dst);
-            CvInvoke.MedianBlur(dst, dst, 27);
-            return dst;
-        }
-        private Image<Gray,byte> BinaryImagePreprocess(Image<Bgr,byte> image)
-        {
-            var bin=new Image<Gray, byte>(image.Size);
-            CvInvoke.CvtColor(image, bin, ColorConversion.Bgr2Gray);
-            CvInvoke.Threshold(bin, bin,threshold, 255, ThresholdType.Binary);
-            return bin;
-        }
-
-        public void setListener(PuzzleLocatorListener listener)
-        {
-            this.listener = listener;
         }
     }
 }

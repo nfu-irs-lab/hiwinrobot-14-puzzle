@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
@@ -9,75 +10,106 @@ using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using ExclusiveProgram.puzzle.visual.concrete;
+using ExclusiveProgram.puzzle.visual.concrete.locator;
 using ExclusiveProgram.puzzle.visual.framework;
 using ExclusiveProgram.ui.component;
 
 namespace ExclusiveProgram
 {
+
+
     public partial class Control : MainForm.ExclusiveControl
     {
+        //private VideoCapture capture;
+        private delegate void DelShowResult(Puzzle_sturct puzzles);
+
 
         public Control()
         {
             InitializeComponent();
             Config = new Config();
         }
-
         private void button1_Click(object sender, EventArgs e)
         {
             corrector_binarization_puzzleView.Controls.Clear();
             corrector_result_puzzleView.Controls.Clear();
             corrector_ROI_puzzleView.Controls.Clear();
+            recognize_match_puzzleView.Controls.Clear();
+            Thread thread = new Thread(DoPuzzleVisual);
+            thread.Start();
+        }
 
-            var minSize = new Size((int)min_width_numeric.Value,(int)min_height_numeric.Value);
-            var maxSize = new Size((int)max_width_numeric.Value,(int)max_height_numeric.Value);
-            var threshold = (int)numericUpDown_threshold.Value;
-            var locator = new PuzzleLocator(threshold,minSize,maxSize);
-            locator.setListener(new MyPuzzleLocatorListener(this));
+        private void DoPuzzleVisual()
+        {
 
+            var minSize = new Size((int)min_width_numeric.Value, (int)min_height_numeric.Value);
+            var maxSize = new Size((int)max_width_numeric.Value, (int)max_height_numeric.Value);
+            var threshold = (int)numericUpDown_blockSize.Value;
+            var green_weight = Double.Parse(textBox_param.Text);
 
-            var corrector_threshold = (int)corrector_threshold_numric.Value;
-            Color backgroundColor = getColorFromTextBox();
-            var corrector = new PuzzleCorrector(corrector_threshold,backgroundColor);
-            corrector.setListener(new MyPuzzleCorrectorListener(this));
+            var preprocessImpl = new NormalPreprocessImpl();
+            var grayConversionImpl = new GreenBackgroundGrayConversionImpl(green_weight);
+            var thresoldImpl= new NormalThresoldImpl(threshold);
+            var binaryPreprocessImpl = new NormalBinaryPreprocessImpl();
 
-            var modelImage = VisualSystem.LoadImageFromFile("samples\\modelImage.jpg");
-            var recognizer = new PuzzleRecognizer(modelImage);
-            recognizer.setListener(new MyRecognizeListener(this));
-
-            var factory = new DefaultPuzzleFactory(locator,recognizer,corrector,new PuzzleResultMerger());
-            factory.setListener(new MyFactoryListener(this));
-
-            var image = VisualSystem.LoadImageFromFile(file_path.Text);
-
-            capture_preview.Image = image.ToBitmap();
+            IPuzzleFactory factory = null;
             try
             {
+
+                var locator = new PuzzleLocator(minSize, maxSize,null,grayConversionImpl,thresoldImpl,binaryPreprocessImpl);
+                var uniquenessThreshold = ((double)numericUpDown_uniqueness_threshold.Value) * 0.01f;
+
+
+                Color backgroundColor = getColorFromTextBox();
+
+                var modelImage = CvInvoke.Imread("samples\\modelImage3.jpg").ToImage<Bgr, byte>();
+                var recognizer = new PuzzleRecognizer(modelImage, uniquenessThreshold, new SiftFlannPuzzleRecognizerImpl(),preprocessImpl,grayConversionImpl,thresoldImpl,new CorrectorBinaryPreprocessImpl());
+                recognizer.setListener(new MyRecognizeListener(this));
+
+                factory = new DefaultPuzzleFactory(locator,recognizer, new PuzzleResultMerger(),5);
+                factory.setListener(new MyFactoryListener(this));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+                var image = CvInvoke.Imread(file_path.Text).ToImage<Bgr, byte>();
+                capture_preview.Image = image.ToBitmap();
                 List<Puzzle_sturct> results = factory.Execute(image);
 
                 foreach (Puzzle_sturct result in results)
                 {
-                    //Point StartPoint = new Point((int)(location.Coordinate.X - (location.Size.Width / 2.0f)), (int)(location.Coordinate.Y - (location.Size.Height / 2.0f)));
-                    //CvInvoke.Rectangle(showImage, new Rectangle(StartPoint.X, StartPoint.Y, location.Size.Width, location.Size.Height), new MCvScalar(0, 0, 255), 3);
-                    //CvInvoke.PutText(showImage, "Angle:" + location.Angle, new Point(StartPoint.X, StartPoint.Y - 15),FontFace.HersheySimplex,2, new MCvScalar(0, 0, 255),3);
-                    Console.WriteLine("" + result.position);
+                    ShowResult(result);
                 }
-            }catch (Exception ex)
+
+        }
+
+        private void ShowResult(Puzzle_sturct result)
+        {
+            if (this.InvokeRequired)
             {
-                Console.WriteLine("Error:"+ex.Message);
-                MessageBox.Show(ex.Message,"辨識錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DelShowResult del = new DelShowResult(ShowResult);
+                this.Invoke(del, result);
+            }
+            else
+            {
+                var control = new UserControl1();
+                control.setImage(result.image.ToBitmap());
+                control.setLabel("Angle:" + Math.Round(result.Angel, 2), result.position);
+                recognize_match_puzzleView.Controls.Add(control);
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            openFileDialog1.InitialDirectory = "D:\\git_projects\\Windows\\nfu-irs-lab\\hiwinrobot-14-puzzle\\ExclusiveProgram\\bin\\x64\\Debug" ;
-            openFileDialog1.Filter = "Image files (*.jpg, *.png)|*.jpg;*.png" ;
+            openFileDialog1.InitialDirectory = "D:\\git_projects\\Windows\\nfu-irs-lab\\hiwinrobot-14-puzzle\\ExclusiveProgram\\bin\\x64\\Debug";
+            openFileDialog1.Filter = "Image files (*.jpg, *.png)|*.jpg;*.png";
             openFileDialog1.FilterIndex = 0;
-            openFileDialog1.RestoreDirectory = true ;
+            openFileDialog1.RestoreDirectory = true;
 
-            if(openFileDialog1.ShowDialog() == DialogResult.OK)
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 string selectedFileName = openFileDialog1.FileName;
                 file_path.Text = selectedFileName;
@@ -96,7 +128,7 @@ namespace ExclusiveProgram
             var colorCode = backgroundColor_textbox.Text;
             if (colorCode == null || colorCode.Length != 7 || !colorCode.StartsWith("#"))
                 return;
-            Color preview_color = getColorFromTextBox(); 
+            Color preview_color = getColorFromTextBox();
             Bitmap Bmp = new Bitmap(100, 100);
             using (Graphics gfx = Graphics.FromImage(Bmp))
             using (SolidBrush brush = new SolidBrush(preview_color))
@@ -118,96 +150,48 @@ namespace ExclusiveProgram
 
         }
 
-        private class MyPuzzleCorrectorListener : PuzzleCorrectorListener
+        private class MyCorrectorListener : PuzzleCorrectorListener
         {
-            public MyPuzzleCorrectorListener(Control ui)
-            {
-                this.ui = ui;
-            }
-
-            private readonly Control ui;
-
-
-            public void onBinarizationDone(Image<Gray, byte> result)
-            {
-
-            }
+            int index = 0;
             public void onPreprocessDone(Image<Gray, byte> result)
             {
-                var control = new UserControl1();
-                control.setImage(result.ToBitmap());
-                control.setLabel("", "");
-                this.ui.corrector_binarization_puzzleView.Controls.Add(control);
-            }
-
-            public void onROIDetected(Image<Bgr, byte> result, LocationResult locationResult)
-            {
-                var control = new UserControl1();
-                control.setImage(result.ToBitmap());
-                control.setLabel(locationResult.Size.ToString(),""+locationResult.Angle);
-                this.ui.corrector_ROI_puzzleView.Controls.Add(control);
-            }
-        }
-
-        private class MyPuzzleLocatorListener : PuzzleLocatorListener
-        {
-
-            public MyPuzzleLocatorListener(Control ui)
-            {
-                this.ui = ui;
-            }
-
-            private readonly Control ui;
-
-            public void onBinarizationDone(Image<Gray, byte> result)
-            {
-            }
-
-            public void onLocated(LocationResult result)
-            {
-
-            }
-
-            public void onPreprocessDone(Image<Gray, byte> result)
-            {
-                ui.capture_binarization_preview.Image=result.ToBitmap();
+                result.Save("results\\" + index++ + ".jpg");
             }
         }
 
         private class MyRecognizeListener : PuzzleRecognizerListener
         {
             int index = 0;
-            public MyRecognizeListener (Control ui)
+            public MyRecognizeListener(Control ui)
             {
                 this.ui = ui;
             }
 
             private readonly Control ui;
 
-            public void OnMatched(Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime, double slope)
+            public void OnMatched(int id,Image<Bgr, byte> modelImage, VectorOfKeyPoint modelKeyPoints, Image<Bgr, byte> observedImage, VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, Mat mask, long matchTime)
             {
                 Mat resultImage = new Mat();
                 Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
                    matches, resultImage, new MCvScalar(0, 0, 255), new MCvScalar(255, 255, 255), mask);
-                CvInvoke.PutText(resultImage, string.Format("{0}ms , {1:0.00}", matchTime, slope), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
 
-                resultImage.Save("matching_results\\"+index+++".jpg");
+                resultImage.Save("results\\matching_" +id+ ".jpg");
                 resultImage.Dispose();
+            }
 
-                /*
-                PictureBox pictureBox=new PictureBox();
-                pictureBox.Size = new Size(500, 347);
-                pictureBox.SizeMode=PictureBoxSizeMode.StretchImage;
-                pictureBox.Image=resultImage.ToImage<Bgr,byte>().ToBitmap();
-                ui.recognize_match_puzzleView.Controls.Add(pictureBox);
-                */
-
+            public void OnPerspective(int id,Image<Bgr, byte> warpedPerspectiveImage,String position)
+            {
+                CvInvoke.PutText(warpedPerspectiveImage, string.Format("position: {0}", position), new Point(1, 50), FontFace.HersheySimplex, 1, new MCvScalar(100, 100, 255), 2, LineType.FourConnected);
+                warpedPerspectiveImage.Save("results\\perspective_"+id+".jpg");
             }
         }
 
         private class MyFactoryListener : PuzzleFactoryListener
         {
-
+            private delegate void DelonLocated(List<LocationResult> results);
+            private delegate void DelOnCorrected(Image<Bgr, byte> result);
+            private delegate void DelonPreprocessDone(Image<Gray, byte> result);
+            private int index;
             public MyFactoryListener(Control ui)
             {
                 this.ui = ui;
@@ -215,23 +199,64 @@ namespace ExclusiveProgram
 
             private readonly Control ui;
 
+            public void onPreprocessDone(Image<Gray, byte> result)
+            {
+                if (this.ui.InvokeRequired)
+                {
+                    DelonPreprocessDone del = new DelonPreprocessDone(onPreprocessDone);
+                    this.ui.Invoke(del, result);
+                }
+                else
+                {
+
+                    ui.capture_binarization_preview.Image = result.ToBitmap();
+                }
+            }
+
             public void onLocated(List<LocationResult> results)
             {
+                if (ui.InvokeRequired)
+                {
+                    DelonLocated del = new DelonLocated(onLocated);
+                    ui.Invoke(del, results);
+                }
+                else
+                {
+                    foreach (var result in results)
+                    {
+                        var control = new UserControl1();
+                        control.setImage(result.ROI.ToBitmap());
+                        control.setLabel(String.Format("[{0},{1}] ({2},{3})",result.Coordinate.X,result.Coordinate.Y,result.Size.Width,result.Size.Height),"Angle:"+Math.Round(result.Angle,2));
+                        ui.corrector_ROI_puzzleView.Controls.Add(control);
+                    }
+                }
             }
 
 
-            public void onCorrected(Image<Bgr, byte> result)
-            {
-                var control = new UserControl1();
-                control.setImage(result.ToBitmap());
-                control.setLabel("","");
-                this.ui.corrector_result_puzzleView.Controls.Add(control);
-            }
 
             public void onRecognized(RecognizeResult result)
             {
             }
+
+            public void onCorrected(Image<Bgr, byte> result)
+            {
+                if (ui.InvokeRequired)
+                {
+                    DelOnCorrected del = new DelOnCorrected(onCorrected);
+                    ui.Invoke(del, result);
+                }
+                else
+                {
+                    var control = new UserControl1();
+                    control.setImage(result.ToBitmap());
+                    control.setLabel("", "");
+                    this.ui.corrector_result_puzzleView.Controls.Add(control);
+                    result.Save("results\\SS" + index++ + ".jpg");
+                }
+            }
         }
+
+
 
     }
 
