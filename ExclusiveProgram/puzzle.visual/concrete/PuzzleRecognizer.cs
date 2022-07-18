@@ -73,7 +73,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     listener.OnMatched(id,preprocessModelImage, modelKeyPoints, observedImage, observedKeyPoints, matches, mask, matchTime);
 
                 Mat homography = FindHomography(modelKeyPoints, observedKeyPoints, matches, mask);
-
+                
                 result.Angle = -Math.Atan2(GetDoubleValue(homography, 0, 1), GetDoubleValue(homography, 0, 0)) * 180 / Math.PI;
 
                 Mat invert_homography = homography.Clone();
@@ -84,8 +84,6 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 Point point = FindPositionOnModelImage(id,warpImage.ToImage<Bgr,byte>());
 
                 var preview_image = warpImage.Clone();
-
-
 
                 Rectangle rect = new Rectangle(Point.Empty, observedImage.Size);
 
@@ -117,7 +115,7 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                 for (int i = 1; i <= 5; i++)
                 {
                     var point1 = new Point(0,(int)height_per_puzzle*i);
-                    var point2 = new Point(preview_image.Width-1,(int)width_per_puzzle*i);
+                    var point2 = new Point(preview_image.Width-1,(int)height_per_puzzle*i);
                     CvInvoke.Line(preview_image, point1, point2, new MCvScalar(0, 0, 255), 2);
                 }
 
@@ -128,8 +126,8 @@ namespace ExclusiveProgram.puzzle.visual.concrete
                     CvInvoke.Line(preview_image, point1, point2, new MCvScalar(0, 0, 255), 2);
                 }
 
-                int x = (int)point.X/ (modelImage.Width / 7);
-                int y = (int)point.Y / (modelImage.Height / 5);
+                int x = (int)(point.X/ width_per_puzzle);
+                int y = (int)(point.Y / height_per_puzzle);
 
                 if (x >= 7)
                     x = 6;
