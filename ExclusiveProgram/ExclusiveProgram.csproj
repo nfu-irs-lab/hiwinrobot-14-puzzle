@@ -128,24 +128,24 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="puzzle.visual\concrete\DefaultPuzzleFactory.cs" />
+    <Compile Include="puzzle.visual\concrete\factory\DefaultPuzzleFactory.cs" />
     <Compile Include="puzzle.visual\concrete\utils\NormalBinaryPreprocessImpl.cs" />
     <Compile Include="puzzle.visual\concrete\utils\NormalThresholdImpl.cs" />
     <Compile Include="puzzle.visual\concrete\utils\CorrectorBinaryPreprocessImpl.cs" />
     <Compile Include="puzzle.visual\concrete\utils\GreenBackgroundGrayConversionImpl.cs" />
     <Compile Include="puzzle.visual\concrete\utils\NormalPreprocessImpl.cs" />
     <Compile Include="puzzle.visual\concrete\utils\AdaptiveThresholdImpl.cs" />
-    <Compile Include="puzzle.visual\concrete\SiftFlannPuzzleRecognizerImpl.cs" />
-    <Compile Include="puzzle.visual\concrete\SiftBfmPuzzleRecognizerImpl.cs" />
-    <Compile Include="puzzle.visual\concrete\PuzzleCorrector.cs" />
-    <Compile Include="puzzle.visual\concrete\PuzzleLocator.cs" />
-    <Compile Include="puzzle.visual\concrete\PuzzleRecognizer.cs" />
-    <Compile Include="puzzle.visual\concrete\PuzzleResultMerger.cs" />
-    <Compile Include="puzzle.visual\framework\IPuzzleFactory.cs" />
-    <Compile Include="puzzle.visual\framework\IPuzzleCorrector.cs" />
-    <Compile Include="puzzle.visual\framework\IPuzzleLocator.cs" />
-    <Compile Include="puzzle.visual\framework\IPuzzleRecognizer.cs" />
-    <Compile Include="puzzle.visual\framework\IPuzzleResultMerger.cs" />
+    <Compile Include="puzzle.visual\concrete\recognizer\SiftFlannPuzzleRecognizerImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\recognizer\SiftBfmPuzzleRecognizerImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\corrector\PuzzleCorrector.cs" />
+    <Compile Include="puzzle.visual\concrete\locator\PuzzleLocator.cs" />
+    <Compile Include="puzzle.visual\concrete\recognizer\PuzzleRecognizer.cs" />
+    <Compile Include="puzzle.visual\concrete\merger\PuzzleResultMerger.cs" />
+    <Compile Include="puzzle.visual\framework\factory\IPuzzleFactory.cs" />
+    <Compile Include="puzzle.visual\framework\corrector\IPuzzleCorrector.cs" />
+    <Compile Include="puzzle.visual\framework\locator\IPuzzleLocator.cs" />
+    <Compile Include="puzzle.visual\framework\recognizer\IPuzzleRecognizer.cs" />
+    <Compile Include="puzzle.visual\framework\merger\IPuzzleResultMerger.cs" />
     <Compile Include="puzzle.visual\framework\utils\IPuzzlePreProcessImpl.cs" />
     <Compile Include="threading\LimitedConcurrencyLevelTaskScheduler.cs" />
     <Compile Include="ui.component\UserControl1.cs">
@@ -180,7 +180,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="puzzle.visual\concrete\KazeFlannPuzzleRecognizerImpl.cs" />
+    <Compile Include="puzzle.visual\concrete\recognizer\KazeFlannPuzzleRecognizerImpl.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -204,6 +204,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="coordinate\" />
     <Folder Include="puzzle.handler\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
